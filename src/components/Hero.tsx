@@ -1,14 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { CATALOG_STUDIO_MODEL_01 } from "@/data/catalog";
 
 const badges = ["New Drop 2026", "Performance Fit", "Premium Fabric"];
 
 export function Hero() {
   return (
     <section
-      id="home"
+      id="hero"
       className="relative overflow-hidden border-b border-white/[0.06] pt-28 pb-16 sm:pt-32 sm:pb-24"
     >
       <div className="pointer-events-none absolute inset-0">
@@ -90,10 +92,17 @@ export function Hero() {
           className="relative ig-tilt-wrap"
         >
           <div className="ig-tilt metal-glow relative rounded-2xl">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl sm:aspect-[5/6]">
-              <div className="absolute inset-0 ig-card-inner" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(214,214,214,0.14),transparent_48%),linear-gradient(145deg,rgba(38,38,44,0.95),rgba(22,22,28,0.98))]" />
-              <div className="absolute inset-0 opacity-[0.35] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:22px_22px]" />
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-iron-950 sm:aspect-[5/6]">
+              <Image
+                src={CATALOG_STUDIO_MODEL_01}
+                alt="Performance compression tee — studio lookbook"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover object-[50%_14%]"
+              />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/35" />
+              <div className="pointer-events-none absolute inset-0 opacity-[0.28] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:22px_22px]" />
 
               <div className="relative flex h-full flex-col justify-end p-6 sm:p-8">
                 <div className="mb-auto pt-6">

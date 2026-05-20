@@ -1,17 +1,16 @@
 import Image from "next/image";
 import { Reveal } from "./Reveal";
 
-/** Swap `photoSrc` to e.g. `/founders/irfan.jpg` after adding files under `public/founders/`. */
 const founders = [
   {
     name: "Irfan Mahmuti",
     role: "Co-founder",
-    photoSrc: "/founders/irfan.svg",
+    photoSrc: "/founders/irfan.png",
   },
   {
     name: "Arxhend Isenaj",
     role: "Co-founder",
-    photoSrc: "/founders/arxhend.svg",
+    photoSrc: "/founders/arxhend.png",
   },
 ] as const;
 

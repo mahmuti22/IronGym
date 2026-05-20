@@ -1,32 +1,37 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Reveal } from "./Reveal";
+import {
+  CATALOG_STUDIO_MODEL_01,
+  productImageFocusClasses,
+} from "@/data/catalog";
 
 const products = [
   {
     name: "IronGym Oversized Tee",
     desc: "Relaxed drape, heavy hand-feel, zero distraction seams.",
     price: "CHF 49",
-    tone: "from-zinc-800/80 to-iron-950",
+    focusIndex: 0,
   },
   {
     name: "Performance Stringer",
     desc: "Racer back, sweat-wicking body, cut for serious volume.",
     price: "CHF 39",
-    tone: "from-zinc-900/90 to-iron-950",
+    focusIndex: 1,
   },
   {
     name: "Heavyweight Hoodie",
     desc: "Dense fleece, structured hood, cold-gym warmth.",
     price: "CHF 119",
-    tone: "from-neutral-900/85 to-iron-950",
+    focusIndex: 2,
   },
   {
     name: "Training Shorts",
     desc: "7” inseam, bonded hem, locked-in waist for heavy sets.",
     price: "CHF 69",
-    tone: "from-stone-900/80 to-iron-950",
+    focusIndex: 3,
   },
-];
+] as const;
 
 export function ProductSection() {
   return (
@@ -55,12 +60,17 @@ export function ProductSection() {
             <Reveal key={p.name} delay={i * 0.06}>
               <div className="ig-tilt-wrap h-full">
                 <article className="ig-tilt group relative flex h-full flex-col rounded-2xl">
-                  <div
-                    className={`relative aspect-[4/5] overflow-hidden rounded-t-2xl bg-gradient-to-br ${p.tone}`}
-                  >
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(214,214,214,0.14),transparent_55%)] opacity-80 transition group-hover:opacity-100" />
-                    <div className="absolute inset-0 opacity-25 [background-image:repeating-linear-gradient(-18deg,rgba(255,255,255,0.05)_0_1px,transparent_1px_10px)]" />
-                    <div className="absolute bottom-4 left-4 rounded-full border border-silver-500/35 bg-white/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-silver-400 backdrop-blur">
+                  <div className="relative aspect-[4/5] overflow-hidden rounded-t-2xl bg-iron-950">
+                    <Image
+                      src={CATALOG_STUDIO_MODEL_01}
+                      alt={`${p.name} — lookbook studio`}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className={`object-cover ${productImageFocusClasses[p.focusIndex]}`}
+                    />
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-black/25" />
+                    <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:repeating-linear-gradient(-18deg,rgba(255,255,255,0.04)_0_1px,transparent_1px_10px)]" />
+                    <div className="absolute bottom-4 left-4 rounded-full border border-silver-500/35 bg-black/45 px-3 py-1 text-[10px] font-semibold uppercase tracking-widest text-silver-300 backdrop-blur-md">
                       IronGym Lab
                     </div>
                   </div>
