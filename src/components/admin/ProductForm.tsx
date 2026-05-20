@@ -1,0 +1,400 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useAdmin } from "./AdminProvider";
+import type { ProductStatus } from "@/lib/admin/types";
+import { AdminCard, adminInputClass, adminLabelClass } from "./admin-ui";
+import { CATALOG_STUDIO_MODEL_01 } from "@/data/catalog";
+import {
+  MAIN_CATEGORY,
+  DEFAULT_SIZES,
+  DEFAULT_COLORS,
+  shopFilterLabels,
+  productImageFocusClasses,
+  type ProductTag,
+  type ShopFilterGroup,
+  type ShopGender,
+} from "@/data/shop";
+
+const ALL_TAGS: ProductTag[] = ["New", "Best Seller", "Sale"];
+
+const emptyForm = {
+  id: "",
+  name: "",
+  description: "",
+  longDescription: "",
+  price: "",
+  filterGroup: "uomo" as ShopFilterGroup,
+  subcategoryId: "",
+  gender: "uomo" as ShopGender,
+  material: "",
+  fit: "Regular fit",
+  careInstructions: "Lavaggio a 30°C. Non candeggiare.",
+  sizesText: DEFAULT_SIZES.join(", "),
+  colorsText: DEFAULT_COLORS.join(", "),
+  tags: [] as ProductTag[],
+  status: "draft" as ProductStatus,
+  imageFocusIndex: 0,
+};
+
+export function ProductForm() {
+  const router = useRouter();
+  const { addProduct, subcategories } = useAdmin();
+  const [form, setForm] = useState(emptyForm);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const subsForGroup = useMemo(
+    () => subcategories.filter((s) => s.filterGroup === form.filterGroup),
+    [subcategories, form.filterGroup]
+  );
+
+  useEffect(() => {
+    if (!form.subcategoryId && subsForGroup[0]) {
+      setForm((f) => ({ ...f, subcategoryId: subsForGroup[0].id }));
+    }
+  }, [form.filterGroup, form.subcategoryId, subsForGroup]);
+
+  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+    setSaved(false);
+  }
+
+  function toggleTag(tag: ProductTag) {
+    setForm((f) => ({
+      ...f,
+      tags: f.tags.includes(tag)
+        ? f.tags.filter((t) => t !== tag)
+        : [...f.tags, tag],
+    }));
+  }
+
+  function handleImagePlaceholder(file: File | null) {
+    if (!file) {
+      setPreviewImage(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewImage(url);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const id =
+      form.id.trim() ||
+      form.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    addProduct({
+      id: id.startsWith("ig-") ? id : `ig-${id}`,
+      name: form.name.trim(),
+      description: form.description.trim(),
+      longDescription: form.longDescription.trim() || form.description.trim(),
+      mainCategory: MAIN_CATEGORY,
+      subcategoryId: form.subcategoryId,
+      filterGroup: form.filterGroup,
+      gender: form.gender,
+      price: Number(form.price) || 0,
+      image: previewImage ?? CATALOG_STUDIO_MODEL_01,
+      imageFocusIndex: form.imageFocusIndex,
+      tags: form.tags,
+      sizes: form.sizesText
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      colors: form.colorsText
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean),
+      material: form.material.trim(),
+      fit: form.fit.trim(),
+      careInstructions: form.careInstructions.trim(),
+      status: form.status,
+    });
+
+    setSaved(true);
+    setTimeout(() => router.push("/admin/products"), 800);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mx-auto max-w-4xl space-y-8">
+      {saved && (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+          Prodotto salvato in memoria — reindirizzamento…
+        </div>
+      )}
+
+      <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
+        <div className="space-y-6">
+          <AdminCard className="p-6">
+            <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-silver-500">
+              Informazioni base
+            </h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className={adminLabelClass}>Nome prodotto *</label>
+                <input
+                  required
+                  value={form.name}
+                  onChange={(e) => update("name", e.target.value)}
+                  className={adminInputClass}
+                  placeholder="IronGym Oversize T-Shirt"
+                />
+              </div>
+              <div>
+                <label className={adminLabelClass}>ID / slug</label>
+                <input
+                  value={form.id}
+                  onChange={(e) => update("id", e.target.value)}
+                  className={adminInputClass}
+                  placeholder="ig-oversize-tee"
+                />
+              </div>
+              <div>
+                <label className={adminLabelClass}>Prezzo (CHF) *</label>
+                <input
+                  required
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={form.price}
+                  onChange={(e) => update("price", e.target.value)}
+                  className={adminInputClass}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={adminLabelClass}>Descrizione breve *</label>
+                <textarea
+                  required
+                  rows={2}
+                  value={form.description}
+                  onChange={(e) => update("description", e.target.value)}
+                  className={adminInputClass}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={adminLabelClass}>Descrizione lunga</label>
+                <textarea
+                  rows={4}
+                  value={form.longDescription}
+                  onChange={(e) => update("longDescription", e.target.value)}
+                  className={adminInputClass}
+                />
+              </div>
+            </div>
+          </AdminCard>
+
+          <AdminCard className="p-6">
+            <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-silver-500">
+              Catalogazione
+            </h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className={adminLabelClass}>Linea *</label>
+                <select
+                  value={form.filterGroup}
+                  onChange={(e) => {
+                    const g = e.target.value as ShopFilterGroup;
+                    update("filterGroup", g);
+                    const first = subcategories.find(
+                      (s) => s.filterGroup === g
+                    );
+                    if (first) update("subcategoryId", first.id);
+                  }}
+                  className={adminInputClass}
+                >
+                  {Object.entries(shopFilterLabels).map(([k, v]) => (
+                    <option key={k} value={k}>
+                      {v}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={adminLabelClass}>Sottocategoria *</label>
+                <select
+                  required
+                  value={form.subcategoryId}
+                  onChange={(e) => update("subcategoryId", e.target.value)}
+                  className={adminInputClass}
+                >
+                  <option value="">Seleziona…</option>
+                  {subsForGroup.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={adminLabelClass}>Genere *</label>
+                <select
+                  value={form.gender}
+                  onChange={(e) =>
+                    update("gender", e.target.value as ShopGender)
+                  }
+                  className={adminInputClass}
+                >
+                  <option value="uomo">Uomo</option>
+                  <option value="donna">Donna</option>
+                  <option value="unisex">Unisex</option>
+                </select>
+              </div>
+              <div>
+                <label className={adminLabelClass}>Stato</label>
+                <select
+                  value={form.status}
+                  onChange={(e) =>
+                    update("status", e.target.value as ProductStatus)
+                  }
+                  className={adminInputClass}
+                >
+                  <option value="draft">Bozza</option>
+                  <option value="published">Pubblicato</option>
+                </select>
+              </div>
+            </div>
+          </AdminCard>
+
+          <AdminCard className="p-6">
+            <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-silver-500">
+              Dettagli prodotto
+            </h2>
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label className={adminLabelClass}>Materiale</label>
+                <input
+                  value={form.material}
+                  onChange={(e) => update("material", e.target.value)}
+                  className={adminInputClass}
+                />
+              </div>
+              <div>
+                <label className={adminLabelClass}>Fit</label>
+                <input
+                  value={form.fit}
+                  onChange={(e) => update("fit", e.target.value)}
+                  className={adminInputClass}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={adminLabelClass}>Taglie (separate da virgola)</label>
+                <input
+                  value={form.sizesText}
+                  onChange={(e) => update("sizesText", e.target.value)}
+                  className={adminInputClass}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={adminLabelClass}>Colori (separate da virgola)</label>
+                <input
+                  value={form.colorsText}
+                  onChange={(e) => update("colorsText", e.target.value)}
+                  className={adminInputClass}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className={adminLabelClass}>Cura del capo</label>
+                <textarea
+                  rows={2}
+                  value={form.careInstructions}
+                  onChange={(e) =>
+                    update("careInstructions", e.target.value)
+                  }
+                  className={adminInputClass}
+                />
+              </div>
+            </div>
+          </AdminCard>
+
+          <AdminCard className="p-6">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-silver-500">
+              Tag
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {ALL_TAGS.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => toggleTag(tag)}
+                  className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition ${
+                    form.tags.includes(tag)
+                      ? "border-silver-300/70 bg-white text-iron-950"
+                      : "border-silver-500/35 text-silver-500 hover:border-silver-400/50"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+          </AdminCard>
+        </div>
+
+        <div className="space-y-6">
+          <AdminCard className="p-6">
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-silver-500">
+              Immagine
+            </h2>
+            <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-iron-950">
+              <Image
+                src={previewImage ?? CATALOG_STUDIO_MODEL_01}
+                alt="Anteprima"
+                fill
+                className={`object-cover ${productImageFocusClasses[form.imageFocusIndex]}`}
+              />
+            </div>
+            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-silver-500/40 bg-white/[0.02] px-4 py-8 text-center transition hover:border-silver-400/50 hover:bg-white/[0.04]">
+              <span className="text-xs font-semibold uppercase tracking-widest text-silver-500">
+                Carica immagine (anteprima locale)
+              </span>
+              <span className="mt-1 text-[10px] text-silver-600">
+                PNG, JPG — non salvata su server
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) =>
+                  handleImagePlaceholder(e.target.files?.[0] ?? null)
+                }
+              />
+            </label>
+            <div className="mt-4">
+              <label className={adminLabelClass}>Focus immagine (0–3)</label>
+              <input
+                type="number"
+                min={0}
+                max={3}
+                value={form.imageFocusIndex}
+                onChange={(e) =>
+                  update("imageFocusIndex", Number(e.target.value))
+                }
+                className={adminInputClass}
+              />
+            </div>
+          </AdminCard>
+
+          <div className="flex flex-col gap-3">
+            <button
+              type="submit"
+              className="min-h-12 rounded-full bg-white text-sm font-semibold text-iron-950 transition hover:bg-silver-300"
+            >
+              Salva prodotto
+            </button>
+            <Link
+              href="/admin/products"
+              className="inline-flex min-h-11 items-center justify-center rounded-full border border-silver-500/35 text-sm font-semibold text-silver-400 transition hover:text-silver-200"
+            >
+              Annulla
+            </Link>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
