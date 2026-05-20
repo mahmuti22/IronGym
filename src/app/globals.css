@@ -1,53 +1,49 @@
 @import "tailwindcss";
 
-:root {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --nav-offset: 5.5rem;
+@theme {
+  --color-iron-950: #050505;
+  --color-iron-900: #0a0a0a;
+  --color-iron-850: #111111;
+  --color-silver-300: #d6d6d6;
+  --color-silver-400: #c0c0c0;
+  --color-silver-500: #a8a8a8;
+  --color-silver-600: #8a8a8a;
+  --color-steel-400: #9eb4c8;
+  --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #f4f4f5;
-  }
-}
-
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: var(--nav-offset);
-}
-
-@media (prefers-reduced-motion: reduce) {
+@layer base {
   html {
-    scroll-behavior: auto;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-iron-950 text-silver-300 antialiased;
+    background-image:
+      radial-gradient(1200px 600px at 50% -10%, rgba(158, 180, 200, 0.06), transparent 55%),
+      radial-gradient(900px 500px at 100% 20%, rgba(192, 192, 192, 0.04), transparent 50%),
+      linear-gradient(180deg, #050505 0%, #0a0a0a 40%, #050505 100%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(214, 214, 214, 0.18);
+    color: #f5f5f5;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+@utility metal-border {
+  border: 1px solid rgba(192, 192, 192, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.45) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 18px 50px rgba(0, 0, 0, 0.45);
 }
 
-/* Hero eyebrow: restrained brushed-steel read on dark UI */
-.steel-eyebrow {
-  background-image: linear-gradient(
-    185deg,
-    #f4f4f5 0%,
-    #d4d4d8 22%,
-    #a1a1aa 55%,
-    #71717a 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  filter: drop-shadow(0 0.5px 0.5px rgba(0, 0, 0, 0.45));
+@utility metal-glow {
+  box-shadow:
+    0 0 0 1px rgba(192, 192, 192, 0.22),
+    0 0 40px rgba(158, 180, 200, 0.08),
+    0 24px 80px rgba(0, 0, 0, 0.55);
 }

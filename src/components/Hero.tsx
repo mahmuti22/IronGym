@@ -1,100 +1,125 @@
-import Image from "next/image";
-import { content } from "@/data/content";
-import { PrimaryButton } from "./PrimaryButton";
-import { SectionContainer } from "./SectionContainer";
+"use client";
+
+import Link from "next/link";
+import { motion } from "framer-motion";
+
+const badges = ["New Drop 2026", "Performance Fit", "Premium Fabric"];
 
 export function Hero() {
-  const { hero } = content;
-
   return (
-    <SectionContainer
-      id="hero"
-      className="pt-28 pb-24 sm:pt-36 sm:pb-28 lg:pt-40"
+    <section
+      id="home"
+      className="relative overflow-hidden border-b border-white/[0.06] pt-28 pb-16 sm:pt-32 sm:pb-24"
     >
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.09] bg-zinc-900/50 shadow-[0_32px_120px_-24px_rgba(0,0,0,0.75)] ring-1 ring-white/[0.04] backdrop-blur-sm sm:rounded-[2.25rem]">
-        <div
-          className="pointer-events-none absolute inset-0 opacity-90"
-          aria-hidden="true"
-          style={{
-            background:
-              "radial-gradient(ellipse 90% 70% at 0% 0%, rgba(245,158,11,0.16), transparent 55%), radial-gradient(ellipse 70% 55% at 100% 0%, rgba(113,113,122,0.35), transparent 50%), linear-gradient(180deg, rgba(24,24,27,0.2) 0%, rgba(9,9,11,0.92) 100%)",
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.07]"
-          aria-hidden="true"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-        <div className="relative grid gap-12 p-8 sm:gap-14 sm:p-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:gap-16 lg:p-14">
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-6">
-              <div className="flex items-center gap-3">
-                <span
-                  className="h-[2px] w-11 bg-gradient-to-r from-zinc-400/70 via-zinc-500/50 to-transparent sm:w-16"
-                  aria-hidden="true"
-                />
-                <p className="steel-eyebrow text-[11px] font-semibold uppercase tracking-[0.28em]">
-                  {hero.eyebrow}
-                </p>
-              </div>
-              <h1 className="max-w-[22ch] text-4xl font-semibold tracking-[-0.03em] text-white sm:max-w-none sm:text-5xl lg:text-[3.35rem] lg:leading-[1.08]">
-                {hero.headline}
-              </h1>
-              <p className="max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg sm:leading-relaxed">
-                {hero.description}
-              </p>
-            </div>
-            <div className="flex flex-col gap-8 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-6">
-              <div className="flex flex-wrap items-center gap-4">
-                <PrimaryButton
-                  href={hero.primaryCta.href}
-                  label={hero.primaryCta.label}
-                />
-                <a
-                  href={hero.secondaryCta.href}
-                  className="inline-flex items-center justify-center rounded-full border border-white/[0.14] bg-white/[0.04] px-7 py-3.5 text-[13px] font-semibold uppercase tracking-[0.12em] text-zinc-200 shadow-inner shadow-white/[0.03] backdrop-blur-sm transition hover:border-white/25 hover:bg-white/[0.07]"
-                >
-                  {hero.secondaryCta.label}
-                </a>
-              </div>
-              <div className="grid w-full grid-cols-3 gap-3 border-t border-white/[0.08] pt-8 sm:w-auto sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
-                {hero.stats.map((stat) => (
-                  <div key={stat.label} className="text-left sm:min-w-[4.5rem]">
-                    <p className="text-lg font-semibold tracking-tight text-white sm:text-xl">
-                      {stat.value}
-                    </p>
-                    <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.18em] text-zinc-500">
-                      {stat.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-          <div className="group relative min-h-[17rem] overflow-hidden rounded-2xl border border-white/[0.1] bg-black/40 shadow-[0_24px_80px_-20px_rgba(0,0,0,0.85)] ring-1 ring-inset ring-white/[0.06] sm:min-h-[22rem] lg:min-h-0">
-            <Image
-              src={hero.image.src}
-              alt={hero.image.alt}
-              width={900}
-              height={1200}
-              className="h-full min-h-[17rem] w-full object-cover transition duration-700 ease-out group-hover:scale-[1.03] sm:min-h-[22rem] lg:min-h-full"
-              priority
-            />
-            <div
-              className="pointer-events-none absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-90"
-              aria-hidden="true"
-            />
-            <div
-              className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-32 top-20 h-96 w-96 rounded-full bg-steel-400/10 blur-3xl" />
+        <div className="absolute -right-24 bottom-0 h-80 w-80 rounded-full bg-silver-400/5 blur-3xl" />
       </div>
-    </SectionContainer>
+
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-16 lg:px-8">
+        <div>
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="mb-4 text-xs font-semibold uppercase tracking-[0.35em] text-silver-600"
+          >
+            IronGym — Swiss engineered attitude
+          </motion.p>
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
+            className="font-display text-5xl leading-[0.95] text-silver-300 sm:text-6xl lg:text-7xl"
+          >
+            Built for Iron.
+            <br />
+            <span className="text-white">Made for Motion.</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-6 max-w-xl text-base leading-relaxed text-silver-500 sm:text-lg"
+          >
+            Premium gym wear designed for discipline, strength and everyday
+            performance.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="mt-8 flex flex-wrap gap-3"
+          >
+            <Link
+              href="#collection"
+              className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-sm font-semibold text-iron-950 shadow-[0_0_0_1px_rgba(255,255,255,0.12)_inset] transition hover:bg-silver-300 hover:shadow-[0_0_40px_rgba(214,214,214,0.18)]"
+            >
+              Shop Collection
+            </Link>
+            <Link
+              href="#about"
+              className="inline-flex min-h-12 items-center justify-center rounded-full border border-silver-400/45 bg-white/[0.03] px-7 text-sm font-semibold text-silver-300 transition hover:border-silver-300/70 hover:bg-white/[0.06] hover:text-white"
+            >
+              Explore Brand
+            </Link>
+          </motion.div>
+
+          <motion.ul
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.28 }}
+            className="mt-10 flex flex-wrap gap-2"
+          >
+            {badges.map((b) => (
+              <li
+                key={b}
+                className="rounded-full border border-silver-600/35 bg-iron-900/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-silver-400 backdrop-blur-sm"
+              >
+                {b}
+              </li>
+            ))}
+          </motion.ul>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          className="relative"
+        >
+          <div className="metal-border metal-glow relative overflow-hidden rounded-2xl bg-gradient-to-br from-iron-850 via-iron-900 to-iron-950 p-[1px]">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-iron-900 sm:aspect-[5/6]">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(214,214,214,0.12),transparent_45%),linear-gradient(145deg,rgba(17,17,17,0.9),rgba(5,5,5,0.95))]" />
+              <div className="absolute inset-0 opacity-[0.35] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:22px_22px]" />
+
+              <div className="relative flex h-full flex-col justify-end p-6 sm:p-8">
+                <div className="mb-auto pt-6">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-silver-500 backdrop-blur-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-silver-400/90 shadow-[0_0_14px_rgba(214,214,214,0.35)]" />
+                    In stock — limited run
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-silver-400/25 bg-black/40 p-4 backdrop-blur-md sm:p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silver-600">
+                    Visual drop
+                  </p>
+                  <p className="mt-2 font-display text-3xl tracking-wide text-white sm:text-4xl">
+                    HEAVY SILENCE
+                  </p>
+                  <p className="mt-2 text-sm text-silver-500">
+                    Matte black kit. Cold steel details. Built to look sharp
+                    under any bar.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="pointer-events-none absolute -bottom-6 -right-4 hidden h-28 w-28 rounded-full border border-silver-400/20 sm:block" />
+        </motion.div>
+      </div>
+    </section>
   );
 }
