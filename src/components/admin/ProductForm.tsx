@@ -22,7 +22,7 @@ import {
 const ALL_TAGS: ProductTag[] = ["New", "Best Seller", "Sale"];
 
 const emptyForm = {
-  id: "",
+  slug: "",
   name: "",
   description: "",
   longDescription: "",
@@ -42,10 +42,11 @@ const emptyForm = {
 
 export function ProductForm() {
   const router = useRouter();
-  const { addProduct, subcategories } = useAdmin();
+  const { addProduct, subcategories, dataSource } = useAdmin();
   const [form, setForm] = useState(emptyForm);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<string | null>(null);
 
   const subsForGroup = useMemo(
     () => subcategories.filter((s) => s.filterGroup === form.filterGroup),
@@ -60,7 +61,7 @@ export function ProductForm() {
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
-    setSaved(false);
+    setFeedback(null);
   }
 
   function toggleTag(tag: ProductTag) {
@@ -81,25 +82,33 @@ export function ProductForm() {
     setPreviewImage(url);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const id =
-      form.id.trim() ||
+    setSaving(true);
+    setFeedback(null);
+
+    const slug =
+      form.slug.trim() ||
       form.name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
 
-    addProduct({
-      id: id.startsWith("ig-") ? id : `ig-${id}`,
+    const legacyId = slug.startsWith("ig-") ? slug : `ig-${slug}`;
+
+    const ok = await addProduct({
+      id: dataSource === "mock" ? legacyId : undefined,
+      slug,
       name: form.name.trim(),
       description: form.description.trim(),
       longDescription: form.longDescription.trim() || form.description.trim(),
       mainCategory: MAIN_CATEGORY,
+      categoryId: null,
       subcategoryId: form.subcategoryId,
       filterGroup: form.filterGroup,
       gender: form.gender,
       price: Number(form.price) || 0,
+      salePrice: null,
       image: previewImage ?? CATALOG_STUDIO_MODEL_01,
       imageFocusIndex: form.imageFocusIndex,
       tags: form.tags,
@@ -115,17 +124,37 @@ export function ProductForm() {
       fit: form.fit.trim(),
       careInstructions: form.careInstructions.trim(),
       status: form.status,
+      stockStatus: "in_stock",
     });
 
-    setSaved(true);
-    setTimeout(() => router.push("/admin/products"), 800);
+    setSaving(false);
+
+    if (ok) {
+      setFeedback(
+        dataSource === "supabase"
+          ? "Saved to database"
+          : "Using local mock data because Supabase is not configured"
+      );
+      setTimeout(() => router.push("/admin/products"), 800);
+    } else {
+      setFeedback("Error while saving product");
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-4xl space-y-8">
-      {saved && (
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-          Prodotto salvato in memoria — reindirizzamento…
+      {feedback && (
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            feedback.includes("Error")
+              ? "border-red-500/30 bg-red-500/10 text-red-300"
+              : feedback.includes("database")
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                : "border-amber-500/30 bg-amber-500/10 text-amber-200"
+          }`}
+        >
+          {feedback}
+          {!feedback.includes("Error") && " — reindirizzamento…"}
         </div>
       )}
 
@@ -147,12 +176,12 @@ export function ProductForm() {
                 />
               </div>
               <div>
-                <label className={adminLabelClass}>ID / slug</label>
+                <label className={adminLabelClass}>Slug URL *</label>
                 <input
-                  value={form.id}
-                  onChange={(e) => update("id", e.target.value)}
+                  value={form.slug}
+                  onChange={(e) => update("slug", e.target.value)}
                   className={adminInputClass}
-                  placeholder="ig-oversize-tee"
+                  placeholder="oversize-tee"
                 />
               </div>
               <div>
@@ -382,9 +411,10 @@ export function ProductForm() {
           <div className="flex flex-col gap-3">
             <button
               type="submit"
-              className="min-h-12 rounded-full bg-white text-sm font-semibold text-iron-950 transition hover:bg-silver-300"
+              disabled={saving}
+              className="min-h-12 rounded-full bg-white text-sm font-semibold text-iron-950 transition hover:bg-silver-300 disabled:opacity-60"
             >
-              Salva prodotto
+              {saving ? "Salvataggio…" : "Salva prodotto"}
             </button>
             <Link
               href="/admin/products"

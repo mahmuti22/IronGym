@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Admin — IronGym",
+  title: "Admin Login — IronGym",
   robots: { index: false, follow: false },
 };
 
-export default function AdminRootLayout({
+export default function AdminLoginLayout({
   children,
 }: {
   children: React.ReactNode;

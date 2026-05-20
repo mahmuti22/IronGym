@@ -3,14 +3,24 @@
 import Link from "next/link";
 import { useAdmin } from "./AdminProvider";
 import { AdminCard, AdminBadge } from "./admin-ui";
-import {
-  shopFilterLabels,
-  getSubcategoryById,
-} from "@/data/shop";
+import { shopFilterLabels } from "@/data/shop";
 
 export function DashboardView() {
-  const { products, groups, subcategories, collectionSubcategories } =
-    useAdmin();
+  const {
+    products,
+    groups,
+    subcategories,
+    collectionSubcategories,
+    dataSource,
+    loading,
+  } = useAdmin();
+
+  function resolveSub(subcategoryId: string | null) {
+    if (!subcategoryId) return undefined;
+    return subcategories.find(
+      (s) => s.id === subcategoryId || s.slug === subcategoryId
+    );
+  }
 
   const published = products.filter((p) => p.status === "published").length;
   const draft = products.filter((p) => p.status === "draft").length;
@@ -23,6 +33,12 @@ export function DashboardView() {
     { label: "Sottocategorie", value: subcategories.length },
     { label: "Collezioni", value: collectionSubcategories.length },
   ];
+
+  if (loading) {
+    return (
+      <p className="py-12 text-center text-silver-500">Caricamento dashboard…</p>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -70,7 +86,7 @@ export function DashboardView() {
           <h2 className="font-semibold text-silver-200">Ultimi prodotti</h2>
           <ul className="mt-4 space-y-3">
             {products.slice(0, 5).map((p) => {
-              const sub = getSubcategoryById(p.subcategoryId);
+              const sub = resolveSub(p.subcategoryId);
               return (
                 <li
                   key={p.id}
@@ -100,8 +116,20 @@ export function DashboardView() {
       <AdminCard className="overflow-hidden">
         <div className="border-b border-white/[0.08] px-5 py-4">
           <p className="text-xs text-silver-600">
-            Dati mock da <code className="text-silver-500">src/data/shop.ts</code>{" "}
-            — modifiche solo in memoria (sessione corrente).
+            {dataSource === "supabase" ? (
+              <>
+                Dati caricati da <strong className="text-silver-400">Supabase</strong>.
+                Le modifiche vengono salvate nel database.
+              </>
+            ) : (
+              <>
+                Fallback mock da{" "}
+                <code className="text-silver-500">src/data/shop.ts</code> — imposta{" "}
+                <code className="text-silver-500">NEXT_PUBLIC_SUPABASE_URL</code> e{" "}
+                <code className="text-silver-500">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{" "}
+                in <code className="text-silver-500">.env.local</code>.
+              </>
+            )}
           </p>
         </div>
       </AdminCard>

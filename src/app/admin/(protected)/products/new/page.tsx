@@ -5,7 +5,7 @@ export default function AdminNewProductPage() {
   return (
     <AdminShell
       title="Nuovo prodotto"
-      description="Compila il form — salvataggio solo in stato locale (nessun database)."
+      description="Compila il form e salva nel database Supabase."
     >
       <ProductForm />
     </AdminShell>

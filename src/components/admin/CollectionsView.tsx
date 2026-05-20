@@ -7,8 +7,44 @@ import { AdminCard, adminInputClass, adminLabelClass } from "./admin-ui";
 import { getGroupPath, getSubcategoryPath } from "@/data/shop";
 
 export function CollectionsView() {
-  const { groups, collectionSubcategories, updateSubcategory } = useAdmin();
+  const {
+    groups,
+    collectionSubcategories,
+    collections,
+    updateSubcategory,
+    updateCollection,
+    dataSource,
+    loading,
+  } = useAdmin();
   const [editingSub, setEditingSub] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  async function saveCollection(subId: string) {
+    const sub = collectionSubcategories.find((s) => s.id === subId);
+    const col = collections.find(
+      (c) => c.id === subId || c.legacyId === subId || c.slug === sub?.slug
+    );
+    setSaving(true);
+    if (col) {
+      await updateCollection(col.id, {
+        name: sub?.title,
+        description: sub?.description,
+        slug: sub?.slug,
+      });
+    } else {
+      await updateSubcategory(subId, {});
+    }
+    setSaving(false);
+    setEditingSub(null);
+  }
+
+  if (loading) {
+    return (
+      <p className="py-12 text-center text-silver-500">
+        Caricamento collezioni…
+      </p>
+    );
+  }
 
   const colGroup = groups.find((g) => g.slug === "collezioni");
 
@@ -64,10 +100,15 @@ export function CollectionsView() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setEditingSub(null)}
-                    className="text-xs font-semibold text-silver-400"
+                    disabled={saving}
+                    onClick={() => saveCollection(sub.id)}
+                    className="text-xs font-semibold text-silver-400 disabled:opacity-50"
                   >
-                    Salva (locale)
+                    {saving
+                      ? "Salvataggio…"
+                      : dataSource === "supabase"
+                        ? "Salva nel database"
+                        : "Salva (mock locale)"}
                   </button>
                 </div>
               ) : (

@@ -5,7 +5,7 @@ export default function AdminDashboardPage() {
   return (
     <AdminShell
       title="Dashboard"
-      description="Panoramica catalogo IronGym — dati mock in memoria."
+      description="Panoramica catalogo IronGym."
     >
       <DashboardView />
     </AdminShell>

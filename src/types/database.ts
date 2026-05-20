@@ -1,0 +1,244 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
+
+export type Database = {
+  public: {
+    Tables: {
+      admin_profiles: {
+        Row: {
+          id: string;
+          email: string;
+          role: string;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          role?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          role?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      categories: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          description: string | null;
+          image_url: string | null;
+          parent_id: string | null;
+          group_slug: string | null;
+          status: string;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string | null;
+          image_url?: string | null;
+          parent_id?: string | null;
+          group_slug?: string | null;
+          status?: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          description?: string | null;
+          image_url?: string | null;
+          parent_id?: string | null;
+          group_slug?: string | null;
+          status?: string;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      collections: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          description: string | null;
+          hero_image_url: string | null;
+          status: string;
+          tags: string[];
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          description?: string | null;
+          hero_image_url?: string | null;
+          status?: string;
+          tags?: string[];
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          description?: string | null;
+          hero_image_url?: string | null;
+          status?: string;
+          tags?: string[];
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      products: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          price: number;
+          sale_price: number | null;
+          category_id: string | null;
+          subcategory_id: string | null;
+          gender: string;
+          short_description: string | null;
+          long_description: string | null;
+          material: string | null;
+          fit: string | null;
+          care_instructions: string | null;
+          sizes: string[];
+          colors: string[];
+          tags: string[];
+          status: string;
+          stock_status: string;
+          main_image_url: string | null;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          price: number;
+          sale_price?: number | null;
+          category_id?: string | null;
+          subcategory_id?: string | null;
+          gender?: string;
+          short_description?: string | null;
+          long_description?: string | null;
+          material?: string | null;
+          fit?: string | null;
+          care_instructions?: string | null;
+          sizes?: string[];
+          colors?: string[];
+          tags?: string[];
+          status?: string;
+          stock_status?: string;
+          main_image_url?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          price?: number;
+          sale_price?: number | null;
+          category_id?: string | null;
+          subcategory_id?: string | null;
+          gender?: string;
+          short_description?: string | null;
+          long_description?: string | null;
+          material?: string | null;
+          fit?: string | null;
+          care_instructions?: string | null;
+          sizes?: string[];
+          colors?: string[];
+          tags?: string[];
+          status?: string;
+          stock_status?: string;
+          main_image_url?: string | null;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      product_collections: {
+        Row: {
+          product_id: string;
+          collection_id: string;
+        };
+        Insert: {
+          product_id: string;
+          collection_id: string;
+        };
+        Update: {
+          product_id?: string;
+          collection_id?: string;
+        };
+        Relationships: [];
+      };
+      product_images: {
+        Row: {
+          id: string;
+          product_id: string;
+          url: string;
+          alt: string | null;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          url: string;
+          alt?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          product_id?: string;
+          url?: string;
+          alt?: string | null;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
+};
+
+export type DbAdminProfile =
+  Database["public"]["Tables"]["admin_profiles"]["Row"];
+export type DbCategory = Database["public"]["Tables"]["categories"]["Row"];
+export type DbCollection = Database["public"]["Tables"]["collections"]["Row"];
+export type DbProduct = Database["public"]["Tables"]["products"]["Row"];
+export type DbProductImage = Database["public"]["Tables"]["product_images"]["Row"];

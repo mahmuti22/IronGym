@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 const nav = [
   { href: "/admin", label: "Dashboard", icon: "◆", exact: true },
@@ -18,6 +21,26 @@ function isNavActive(pathname: string, href: string, exact: boolean) {
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (!isSupabaseConfigured()) {
+      router.push("/admin/login");
+      return;
+    }
+
+    const supabase = createBrowserSupabaseClient();
+    if (!supabase) {
+      router.push("/admin/login");
+      return;
+    }
+
+    setLoggingOut(true);
+    await supabase.auth.signOut();
+    router.push("/admin/login");
+    router.refresh();
+  }
 
   return (
     <aside className="flex w-full flex-col border-r border-white/[0.08] bg-iron-900/80 lg:w-64 lg:shrink-0">
@@ -55,7 +78,7 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-white/[0.08] p-4">
+      <div className="border-t border-white/[0.08] p-4 space-y-2">
         <Link
           href="/"
           target="_blank"
@@ -63,9 +86,14 @@ export function AdminSidebar() {
         >
           Vai al sito →
         </Link>
-        <p className="mt-3 text-center text-[10px] text-silver-700">
-          Solo UI · dati locali
-        </p>
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="flex w-full items-center justify-center rounded-xl border border-red-500/25 bg-red-500/5 px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-red-300/90 transition hover:border-red-400/40 hover:bg-red-500/10 disabled:opacity-50"
+        >
+          {loggingOut ? "Uscita…" : "Logout"}
+        </button>
       </div>
     </aside>
   );

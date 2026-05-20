@@ -1,6 +1,7 @@
 "use client";
 
 import { AdminSidebar } from "./AdminSidebar";
+import { AdminNoticeBar } from "./AdminNoticeBar";
 
 type AdminShellProps = {
   children: React.ReactNode;
@@ -20,6 +21,7 @@ export function AdminShell({
       <div className="flex min-h-dvh flex-col lg:flex-row">
         <AdminSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
+          <AdminNoticeBar />
           {(title || action) && (
             <header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-4 border-b border-white/[0.08] bg-iron-950/90 px-4 py-5 backdrop-blur-xl sm:px-8">
               <div>

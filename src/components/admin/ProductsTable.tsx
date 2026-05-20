@@ -7,7 +7,6 @@ import { useAdmin } from "./AdminProvider";
 import { AdminBadge } from "./admin-ui";
 import {
   formatPrice,
-  getSubcategoryById,
   getProductPath,
   shopFilterLabels,
   productImageFocusClasses,
@@ -15,9 +14,17 @@ import {
 } from "@/data/shop";
 
 export function ProductsTable() {
-  const { products, removeProduct } = useAdmin();
+  const {
+    products,
+    subcategories,
+    removeProduct,
+    toggleProductStatus,
+    dataSource,
+    loading,
+  } = useAdmin();
   const [search, setSearch] = useState("");
   const [groupFilter, setGroupFilter] = useState<ShopFilterGroup | "all">("all");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -27,10 +34,37 @@ export function ProductsTable() {
       const matchSearch =
         !q ||
         p.name.toLowerCase().includes(q) ||
-        p.id.toLowerCase().includes(q);
+        p.id.toLowerCase().includes(q) ||
+        p.slug.toLowerCase().includes(q);
       return matchGroup && matchSearch;
     });
   }, [products, search, groupFilter]);
+
+  function resolveSub(subcategoryId: string | null) {
+    if (!subcategoryId) return undefined;
+    return subcategories.find(
+      (s) => s.id === subcategoryId || s.slug === subcategoryId
+    );
+  }
+
+  async function handleDelete(id: string, name: string) {
+    if (
+      !window.confirm(
+        `Eliminare il prodotto "${name}"? Questa azione non può essere annullata.`
+      )
+    ) {
+      return;
+    }
+    setDeletingId(id);
+    await removeProduct(id);
+    setDeletingId(null);
+  }
+
+  if (loading) {
+    return (
+      <p className="py-12 text-center text-silver-500">Caricamento prodotti…</p>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -59,7 +93,7 @@ export function ProductsTable() {
 
       <div className="overflow-hidden rounded-2xl border border-silver-500/25 bg-white/[0.02]">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[880px] text-left text-sm">
+          <table className="w-full min-w-[960px] text-left text-sm">
             <thead>
               <tr className="border-b border-white/[0.08] bg-white/[0.04]">
                 <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
@@ -97,7 +131,9 @@ export function ProductsTable() {
                 </tr>
               ) : (
                 filtered.map((p) => {
-                  const sub = getSubcategoryById(p.subcategoryId);
+                  const sub = resolveSub(p.subcategoryId);
+                  const publicId =
+                    dataSource === "supabase" ? p.slug : p.id;
                   return (
                     <tr
                       key={p.id}
@@ -117,14 +153,16 @@ export function ProductsTable() {
                             <p className="font-medium text-silver-200">
                               {p.name}
                             </p>
-                            <p className="text-xs text-silver-600">{p.id}</p>
+                            <p className="text-xs text-silver-600">
+                              {p.slug}
+                            </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-silver-400">
                         <p>{shopFilterLabels[p.filterGroup]}</p>
                         <p className="text-xs text-silver-600">
-                          {sub?.title ?? p.subcategoryId}
+                          {sub?.title ?? p.subcategoryId ?? "—"}
                         </p>
                       </td>
                       <td className="px-4 py-3 font-medium text-silver-300">
@@ -145,18 +183,26 @@ export function ProductsTable() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <AdminBadge
-                          variant={
-                            p.status === "published" ? "success" : "warning"
-                          }
+                        <button
+                          type="button"
+                          onClick={() => toggleProductStatus(p.id)}
+                          className="inline-block"
                         >
-                          {p.status === "published" ? "Pubblicato" : "Bozza"}
-                        </AdminBadge>
+                          <AdminBadge
+                            variant={
+                              p.status === "published" ? "success" : "warning"
+                            }
+                          >
+                            {p.status === "published"
+                              ? "Pubblicato"
+                              : "Bozza"}
+                          </AdminBadge>
+                        </button>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
                           <Link
-                            href={getProductPath(p.id)}
+                            href={getProductPath(publicId)}
                             target="_blank"
                             className="text-xs font-semibold text-silver-400 hover:text-silver-200"
                           >
@@ -164,10 +210,11 @@ export function ProductsTable() {
                           </Link>
                           <button
                             type="button"
-                            onClick={() => removeProduct(p.id)}
-                            className="text-xs font-semibold text-red-400/80 hover:text-red-300"
+                            disabled={deletingId === p.id}
+                            onClick={() => handleDelete(p.id, p.name)}
+                            className="text-xs font-semibold text-red-400/80 hover:text-red-300 disabled:opacity-50"
                           >
-                            Elimina
+                            {deletingId === p.id ? "…" : "Elimina"}
                           </button>
                         </div>
                       </td>
@@ -180,7 +227,8 @@ export function ProductsTable() {
         </div>
       </div>
       <p className="text-xs text-silver-600">
-        {filtered.length} di {products.length} prodotti (sessione locale)
+        {filtered.length} di {products.length} prodotti —{" "}
+        {dataSource === "supabase" ? "Supabase" : "sessione mock locale"}
       </p>
     </div>
   );

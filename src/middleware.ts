@@ -6,8 +6,11 @@ import {
   isProductId,
   isShopFilterGroup,
 } from "@/data/shop";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { createMiddlewareSupabaseClient } from "@/lib/supabase/middleware";
+import { checkIsAdmin } from "@/lib/admin/auth-check";
 
-export function middleware(request: NextRequest) {
+function handleShopRedirects(request: NextRequest): NextResponse | null {
   const { pathname, searchParams } = request.nextUrl;
 
   const singleMatch = pathname.match(/^\/shop\/([^/]+)$/);
@@ -36,9 +39,74 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  return null;
+}
+
+async function handleAdminAuth(
+  request: NextRequest
+): Promise<NextResponse> {
+  const { pathname } = request.nextUrl;
+  const isLoginPage = pathname === "/admin/login";
+
+  if (!isSupabaseConfigured()) {
+    if (isLoginPage) {
+      return NextResponse.redirect(new URL("/admin", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  const response = NextResponse.next({ request });
+  const supabase = createMiddlewareSupabaseClient(request, response);
+
+  if (!supabase) {
+    return response;
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (isLoginPage) {
+    if (user) {
+      const isAdmin = await checkIsAdmin(supabase, user.id);
+      if (isAdmin) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      }
+    }
+    return response;
+  }
+
+  if (!user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/login";
+    url.searchParams.set("error", "session_required");
+    return NextResponse.redirect(url);
+  }
+
+  const isAdmin = await checkIsAdmin(supabase, user.id);
+  if (!isAdmin) {
+    await supabase.auth.signOut();
+    const url = request.nextUrl.clone();
+    url.pathname = "/admin/login";
+    url.searchParams.set("error", "access_denied");
+    return NextResponse.redirect(url);
+  }
+
+  return response;
+}
+
+export async function middleware(request: NextRequest) {
+  const shopRedirect = handleShopRedirects(request);
+  if (shopRedirect) return shopRedirect;
+
+  const { pathname } = request.nextUrl;
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return handleAdminAuth(request);
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/shop", "/shop/:segment"],
+  matcher: ["/shop", "/shop/:path*", "/admin", "/admin/:path*"],
 };

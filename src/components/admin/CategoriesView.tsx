@@ -7,10 +7,30 @@ import { AdminCard, adminInputClass, adminLabelClass } from "./admin-ui";
 import { getGroupPath, getSubcategoryPath } from "@/data/shop";
 
 export function CategoriesView() {
-  const { groups, categorySubcategories, updateGroup, updateSubcategory } =
-    useAdmin();
+  const {
+    groups,
+    categorySubcategories,
+    updateGroup,
+    updateSubcategory,
+    dataSource,
+    loading,
+  } = useAdmin();
   const [editingGroup, setEditingGroup] = useState<string | null>(null);
   const [editingSub, setEditingSub] = useState<string | null>(null);
+  const [savingSub, setSavingSub] = useState(false);
+
+  async function saveSubcategory(id: string) {
+    setSavingSub(true);
+    await updateSubcategory(id, {});
+    setSavingSub(false);
+    setEditingSub(null);
+  }
+
+  if (loading) {
+    return (
+      <p className="py-12 text-center text-silver-500">Caricamento categorie…</p>
+    );
+  }
 
   const shopGroupsOnly = groups.filter((g) => g.slug !== "collezioni");
 
@@ -126,10 +146,15 @@ export function CategoriesView() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setEditingSub(null)}
-                    className="text-xs font-semibold text-silver-400 sm:col-span-2"
+                    disabled={savingSub}
+                    onClick={() => saveSubcategory(sub.id)}
+                    className="text-xs font-semibold text-silver-400 sm:col-span-2 disabled:opacity-50"
                   >
-                    Salva (locale)
+                    {savingSub
+                      ? "Salvataggio…"
+                      : dataSource === "supabase"
+                        ? "Salva nel database"
+                        : "Salva (mock locale)"}
                   </button>
                 </div>
               ) : (
