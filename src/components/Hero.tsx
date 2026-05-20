@@ -57,7 +57,7 @@ export function Hero() {
             className="mt-8 flex flex-wrap gap-3"
           >
             <Link
-              href="#collection"
+              href="/shop"
               className="inline-flex min-h-12 items-center justify-center rounded-full bg-white px-7 text-sm font-semibold text-iron-950 shadow-[0_0_0_1px_rgba(255,255,255,0.12)_inset] transition hover:bg-silver-300 hover:shadow-[0_0_40px_rgba(214,214,214,0.18)]"
             >
               Shop Collection

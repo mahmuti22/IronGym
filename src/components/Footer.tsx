@@ -12,7 +12,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { href: "/#contact", label: "Zahlung" },
       { href: "/#contact", label: "Versand & Lieferung" },
       { href: "/#contact", label: "Kontakt" },
-      { href: "/#collection", label: "Grössentabelle" },
+      { href: "/shop", label: "Grössentabelle" },
     ],
   },
   {

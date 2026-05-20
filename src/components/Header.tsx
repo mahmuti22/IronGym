@@ -5,7 +5,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 const nav = [
   { href: "/", label: "Home" },
-  { href: "/#collection", label: "Collection" },
+  { href: "/shop", label: "Shop" },
+  { href: "/#abbigliamento", label: "Abbigliamento" },
   { href: "/about", label: "About" },
   { href: "/login", label: "Login" },
   { href: "/#contact", label: "Contact" },
@@ -38,7 +39,7 @@ export function Header() {
 
         <div className="hidden md:block">
           <Link
-            href="/#collection"
+            href="/shop"
             className="inline-flex items-center justify-center rounded-full border border-silver-400/40 bg-white/[0.04] px-5 py-2 text-sm font-semibold text-silver-300 shadow-[0_0_0_1px_rgba(0,0,0,0.35)_inset] transition hover:border-silver-300/60 hover:bg-white/[0.07] hover:text-white"
           >
             Shop Now
@@ -94,7 +95,7 @@ export function Header() {
                 Login
               </Link>
               <Link
-                href="/#collection"
+                href="/shop"
                 onClick={() => setOpen(false)}
                 className="mt-2 inline-flex items-center justify-center rounded-full border border-silver-400/40 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-silver-300"
               >

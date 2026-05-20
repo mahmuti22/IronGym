@@ -54,6 +54,12 @@ export function ProductSection() {
               Four core pieces engineered for training — minimal outside the gym,
               uncompromising inside it.
             </p>
+            <Link
+              href="/shop"
+              className="mt-6 inline-flex text-sm font-semibold text-silver-300 transition hover:text-white"
+            >
+              Tutto l&apos;Abbigliamento Gym →
+            </Link>
           </div>
         </Reveal>
 
@@ -88,7 +94,7 @@ export function ProductSection() {
                         {p.price}
                       </span>
                       <Link
-                        href="#collection"
+                        href="/shop"
                         className="inline-flex items-center justify-center rounded-full border border-silver-400/45 bg-white/[0.08] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-silver-200 transition hover:border-silver-300/70 hover:bg-white/[0.14] hover:text-white"
                       >
                         View Product
