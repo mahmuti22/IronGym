@@ -1,13 +1,13 @@
 "use client";
 
-import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 export function LogoIntro() {
   return (
     <section
       id="home"
-      aria-label="Airon Gym"
+      aria-label="IronGym"
       className="relative flex min-h-[100dvh] items-center justify-center bg-[#010101] px-5 pb-16 pt-[5.75rem] sm:px-8 sm:pb-20 sm:pt-24"
     >
       <div
@@ -20,20 +20,20 @@ export function LogoIntro() {
       />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.94 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 w-full max-w-[min(92vw,720px)] sm:max-w-[min(88vw,900px)] lg:max-w-[min(85vw,1040px)]"
+        className="relative z-10 text-center"
       >
-        <Image
-          src="/branding/airon-gym-logo.png"
-          alt="Airon Gym — logo"
-          width={1024}
-          height={1024}
-          priority
-          sizes="(max-width: 640px) 92vw, (max-width: 1024px) 88vw, 1040px"
-          className="h-auto w-full select-none object-contain drop-shadow-[0_0_80px_rgba(255,255,255,0.06)]"
-        />
+        <Link
+          href="/"
+          className="font-display ig-title-shimmer text-[clamp(4rem,18vw,9rem)] leading-[0.9] tracking-wide text-silver-200 transition hover:text-white"
+        >
+          Iron<span className="text-silver-500">Gym</span>
+        </Link>
+        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.4em] text-silver-600">
+          Stronger everyday
+        </p>
       </motion.div>
 
       <p

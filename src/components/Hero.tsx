@@ -61,7 +61,7 @@ export function Hero() {
               Shop Collection
             </Link>
             <Link
-              href="#about"
+              href="/about"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-silver-400/45 bg-white/[0.03] px-7 text-sm font-semibold text-silver-300 transition hover:border-silver-300/70 hover:bg-white/[0.06] hover:text-white"
             >
               Explore Brand
