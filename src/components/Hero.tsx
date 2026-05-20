@@ -10,7 +10,7 @@ const badges = ["New Drop 2026", "Performance Fit", "Premium Fabric"];
 export function Hero() {
   return (
     <section
-      id="hero"
+      aria-labelledby="hero-heading"
       className="relative overflow-hidden border-b border-white/[0.06] pt-28 pb-16 sm:pt-32 sm:pb-24"
     >
       <div className="pointer-events-none absolute inset-0">
@@ -31,6 +31,7 @@ export function Hero() {
             — Swiss engineered attitude
           </motion.p>
           <motion.h1
+            id="hero-heading"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}

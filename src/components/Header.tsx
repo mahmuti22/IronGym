@@ -3,14 +3,19 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { IRON_GYM_HOME_INTRO_EVENT } from "@/lib/home-intro";
+
 const nav = [
-  { href: "/", label: "Home" },
   { href: "/shop", label: "Shop" },
   { href: "/#abbigliamento", label: "Abbigliamento" },
   { href: "/about", label: "About" },
   { href: "/login", label: "Login" },
   { href: "/#contact", label: "Contact" },
 ];
+
+function playHomeIntro() {
+  window.dispatchEvent(new Event(IRON_GYM_HOME_INTRO_EVENT));
+}
 
 export function Header() {
   const [open, setOpen] = useState(false);
@@ -26,6 +31,13 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
+          <Link
+            href="/"
+            onClick={playHomeIntro}
+            className="text-sm font-medium text-silver-500 transition hover:text-silver-300"
+          >
+            Home
+          </Link>
           {nav.map((item) => (
             <Link
               key={item.href}
@@ -77,6 +89,16 @@ export function Header() {
             className="overflow-hidden border-t border-white/[0.06] md:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4 sm:px-6">
+              <Link
+                href="/"
+                onClick={() => {
+                  playHomeIntro();
+                  setOpen(false);
+                }}
+                className="rounded-lg px-3 py-3 text-sm font-medium text-silver-400 transition hover:bg-white/[0.04] hover:text-silver-300"
+              >
+                Home
+              </Link>
               {nav.map((item) => (
                 <Link
                   key={item.href}

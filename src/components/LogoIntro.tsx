@@ -7,7 +7,7 @@ import { IronGymMark } from "./IronGymMark";
 export function LogoIntro() {
   return (
     <section
-      id="home"
+      id="home-logo-intro"
       aria-label="IronGym"
       className="relative flex min-h-[100dvh] items-center justify-center bg-[#010101] px-5 pb-16 pt-[5.75rem] sm:px-8 sm:pb-20 sm:pt-24"
     >
@@ -36,13 +36,6 @@ export function LogoIntro() {
           Stronger everyday
         </p>
       </motion.div>
-
-      <p
-        className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2 text-[10px] font-semibold uppercase tracking-[0.4em] text-silver-600 sm:bottom-10"
-        aria-hidden
-      >
-        Scroll
-      </p>
     </section>
   );
 }
