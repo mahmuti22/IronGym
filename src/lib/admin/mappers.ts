@@ -14,6 +14,7 @@ import type {
   AdminProduct,
   ProductStatus,
 } from "@/lib/admin/types";
+import { categoryPathSlug } from "@/lib/shop/category-utils";
 
 const VALID_TAGS: ProductTag[] = ["New", "Best Seller", "Sale"];
 
@@ -99,18 +100,34 @@ export function mapDbProduct(
   };
 }
 
-/** UI legacy: ShopSubcategory list from admin categories */
+/** Sottocategorie (solo figli con parent_id) per admin e form prodotto */
 export function categoriesToSubcategories(
   categories: AdminCategory[]
 ): ShopSubcategory[] {
-  return categories.map((c) => ({
-    id: c.legacyId ?? c.id,
-    slug: c.slug,
-    title: c.name,
-    description: c.description ?? "",
-    filterGroup: (c.groupSlug ?? "uomo") as ShopFilterGroup,
-    imageFocusIndex: 0,
-  }));
+  return categories
+    .filter((c) => c.parentId != null)
+    .map((c) => ({
+      id: c.legacyId ?? c.id,
+      slug: categoryPathSlug(c.slug, c.groupSlug),
+      title: c.name,
+      description: c.description ?? "",
+      filterGroup: (c.groupSlug ?? "uomo") as ShopFilterGroup,
+      imageFocusIndex: 0,
+      dbSlug: c.slug,
+    }));
+}
+
+/** Categorie principali (senza parent) */
+export function categoriesToTopLevelGroups(
+  categories: AdminCategory[]
+): { slug: ShopFilterGroup; title: string; description: string }[] {
+  return categories
+    .filter((c) => !c.parentId && c.groupSlug)
+    .map((c) => ({
+      slug: c.groupSlug as ShopFilterGroup,
+      title: c.name,
+      description: c.description ?? "",
+    }));
 }
 
 export function slugify(text: string): string {

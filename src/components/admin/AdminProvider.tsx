@@ -12,7 +12,12 @@ import {
 import { shopGroups } from "@/data/shop";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { fetchProducts, createProduct, updateProduct, deleteProduct, setProductStatus } from "@/lib/admin/products";
-import { fetchCategories, upsertCategory } from "@/lib/admin/categories";
+import {
+  fetchCategories,
+  upsertCategory,
+  deleteCategory,
+  type CategoryInput,
+} from "@/lib/admin/categories";
 import { fetchCollections, upsertCollection } from "@/lib/admin/collections";
 import { categoriesToSubcategories, slugify } from "@/lib/admin/mappers";
 import {
@@ -52,6 +57,8 @@ type AdminContextValue = {
   toggleProductStatus: (id: string) => Promise<boolean>;
   updateGroup: (slug: ShopGroup["slug"], data: Partial<ShopGroup>) => void;
   updateSubcategory: (id: string, data: Partial<ShopSubcategory>) => Promise<boolean>;
+  saveCategory: (input: CategoryInput) => Promise<boolean>;
+  deleteCategoryById: (id: string) => Promise<boolean>;
   updateCollection: (id: string, data: Partial<AdminCollection>) => Promise<boolean>;
   collectionSubcategories: ShopSubcategory[];
   categorySubcategories: ShopSubcategory[];
@@ -117,8 +124,24 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         description: c.description ?? "",
         filterGroup: "collezioni" as const,
         imageFocusIndex: 0,
+        dbSlug: c.slug,
       }));
       setSubcategories([...subsFromCats, ...subsFromCols]);
+
+      const tops = cats.filter((c) => !c.parentId && c.groupSlug);
+      if (tops.length > 0) {
+        setGroups(
+          tops.map((t) => {
+            const staticG = shopGroups.find((g) => g.slug === t.groupSlug);
+            return {
+              slug: t.groupSlug!,
+              title: t.name,
+              description: t.description ?? staticG?.description ?? "",
+              imageFocusIndex: staticG?.imageFocusIndex ?? 0,
+            };
+          })
+        );
+      }
     } else {
       cats = getMockCategories();
       cols = getMockCollections();
@@ -336,6 +359,60 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     [dataSource, subcategories, categories]
   );
 
+  const saveCategory = useCallback(
+    async (input: CategoryInput): Promise<boolean> => {
+      if (dataSource !== "supabase") {
+        setNotice({
+          type: "info",
+          message:
+            "Using local mock data because Supabase is not configured",
+        });
+        return false;
+      }
+
+      const result = await upsertCategory(input);
+      if (!result.ok) {
+        setNotice({
+          type: "error",
+          message: result.error ?? "Error while saving category",
+        });
+        return false;
+      }
+
+      await loadAll();
+      setNotice({ type: "success", message: "Saved to database" });
+      return true;
+    },
+    [dataSource, loadAll]
+  );
+
+  const deleteCategoryById = useCallback(
+    async (id: string): Promise<boolean> => {
+      if (dataSource !== "supabase") {
+        setNotice({
+          type: "info",
+          message:
+            "Using local mock data because Supabase is not configured",
+        });
+        return false;
+      }
+
+      const result = await deleteCategory(id);
+      if (!result.ok) {
+        setNotice({
+          type: "error",
+          message: result.error ?? "Error while deleting category",
+        });
+        return false;
+      }
+
+      await loadAll();
+      setNotice({ type: "success", message: "Saved to database" });
+      return true;
+    },
+    [dataSource, loadAll]
+  );
+
   const updateCollection = useCallback(
     async (id: string, data: Partial<AdminCollection>): Promise<boolean> => {
       const col = collections.find((c) => c.id === id || c.legacyId === id);
@@ -416,6 +493,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       toggleProductStatus,
       updateGroup,
       updateSubcategory,
+      saveCategory,
+      deleteCategoryById,
       updateCollection,
       collectionSubcategories,
       categorySubcategories,
@@ -437,6 +516,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       toggleProductStatus,
       updateGroup,
       updateSubcategory,
+      saveCategory,
+      deleteCategoryById,
       updateCollection,
       collectionSubcategories,
       categorySubcategories,

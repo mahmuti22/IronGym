@@ -1,36 +1,30 @@
 import {
   MAIN_CATEGORY,
-  shopGroups,
-  shopSubcategories,
-  shopProducts,
   getSubcategoryPath,
-  getProductById,
+  type ShopGroup,
+  type ShopProduct,
+  type ShopSubcategory,
 } from "@/data/shop";
 import { GroupCard } from "./GroupCard";
 import { CategoryCard } from "./CategoryCard";
 import { ProductGrid } from "./ProductGrid";
 
-const featuredSubcategoryIds = [
-  "uomo-joggers",
-  "donna-leggings",
-  "acc-gloves",
-  "col-new",
-  "uomo-hoodie",
-  "donna-bra",
-  "acc-bag",
-  "col-bestseller",
-];
+type ShopLandingProps = {
+  groups: ShopGroup[];
+  subcategories: ShopSubcategory[];
+  products: ShopProduct[];
+};
 
-export function ShopLanding() {
-  const featuredSubs = featuredSubcategoryIds
-    .map((id) => shopSubcategories.find((s) => s.id === id))
-    .filter((s): s is NonNullable<typeof s> => Boolean(s));
+export function ShopLanding({
+  groups,
+  subcategories,
+  products,
+}: ShopLandingProps) {
+  const featuredSubs = subcategories.slice(0, 8);
 
-  const featuredProducts = shopProducts
+  const featuredProducts = products
     .filter((p) => p.tags?.includes("Best Seller") || p.tags?.includes("New"))
-    .slice(0, 4)
-    .map((p) => getProductById(p.id)!)
-    .filter(Boolean);
+    .slice(0, 4);
 
   return (
     <div className="space-y-16 sm:space-y-20">
@@ -55,7 +49,7 @@ export function ShopLanding() {
           Categorie principali
         </h2>
         <div className="mt-8 grid gap-6 sm:grid-cols-2">
-          {shopGroups.map((group) => (
+          {groups.map((group) => (
             <GroupCard key={group.slug} group={group} />
           ))}
         </div>
@@ -70,18 +64,24 @@ export function ShopLanding() {
             Sottocategorie
           </h2>
           <p className="text-xs text-silver-600">
-            {shopSubcategories.length} linee disponibili
+            {subcategories.length} linee disponibili
           </p>
         </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredSubs.map((sub) => (
-            <CategoryCard
-              key={sub.id}
-              category={sub}
-              href={getSubcategoryPath(sub)}
-            />
-          ))}
-        </div>
+        {subcategories.length === 0 ? (
+          <p className="mt-6 text-sm text-silver-500">
+            Sottocategorie in arrivo.
+          </p>
+        ) : (
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredSubs.map((sub) => (
+              <CategoryCard
+                key={sub.id}
+                category={sub}
+                href={getSubcategoryPath(sub)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       <section aria-labelledby="shop-featured-heading">

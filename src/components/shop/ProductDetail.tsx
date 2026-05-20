@@ -7,22 +7,38 @@ import { motion } from "framer-motion";
 import type { ShopProduct } from "@/data/shop";
 import {
   formatPrice,
-  getSimilarProducts,
   getSubcategoryById,
   MAIN_CATEGORY,
   productImageFocusClasses,
   shopFilterLabels,
 } from "@/data/shop";
+import type { ShopSubcategory } from "@/data/shop";
 import { ProductTags } from "./ProductTags";
 import { ProductCard } from "./ProductCard";
 
 type ProductDetailProps = {
   product: ShopProduct;
+  subcategoryTitle?: string | null;
+  similarProducts: ShopProduct[];
 };
 
-export function ProductDetail({ product }: ProductDetailProps) {
-  const subcategory = getSubcategoryById(product.subcategoryId);
-  const similar = getSimilarProducts(product, 4);
+export function ProductDetail({
+  product,
+  subcategoryTitle,
+  similarProducts,
+}: ProductDetailProps) {
+  const subcategory: ShopSubcategory | undefined = subcategoryTitle
+    ? {
+        id: product.subcategoryId,
+        slug: product.subcategorySlug ?? "",
+        title: subcategoryTitle,
+        description: "",
+        filterGroup: product.filterGroup,
+        imageFocusIndex: 0,
+      }
+    : getSubcategoryById(product.subcategoryId);
+
+  const similar = similarProducts;
 
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? "M");
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] ?? "");

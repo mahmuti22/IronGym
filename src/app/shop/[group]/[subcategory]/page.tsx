@@ -7,14 +7,19 @@ import { ShopBreadcrumbs } from "@/components/shop/ShopBreadcrumbs";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import {
   MAIN_CATEGORY,
-  getAllSubcategoryParams,
-  getGroupPath,
-  getProductsBySubcategorySlug,
-  getShopGroupBySlug,
-  getSubcategoryBySlug,
   SHOP_RESERVED_SEGMENTS,
+  getGroupPath,
   shopFilterLabels,
 } from "@/data/shop";
+import { getAllSubcategoryParams } from "@/data/shop";
+import {
+  getCatalogGroup,
+  getCatalogProductsBySubcategory,
+  getCatalogSubcategoryBySlug,
+  getShopCatalog,
+} from "@/lib/shop/catalog";
+
+export const revalidate = 60;
 
 type PageProps = {
   params: Promise<{ group: string; subcategory: string }>;
@@ -26,7 +31,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { group, subcategory } = await params;
-  const sub = getSubcategoryBySlug(group, subcategory);
+  const catalog = await getShopCatalog();
+  const sub = getCatalogSubcategoryBySlug(catalog, group, subcategory);
   if (!sub) return { title: "Sottocategoria non trovata — IronGym" };
   return {
     title: `${sub.title} — ${shopFilterLabels[sub.filterGroup]} | IronGym`,
@@ -41,14 +47,15 @@ export default async function ShopSubcategoryPage({ params }: PageProps) {
     notFound();
   }
 
-  const shopGroup = getShopGroupBySlug(group);
-  const sub = getSubcategoryBySlug(group, subcategory);
+  const catalog = await getShopCatalog();
+  const shopGroup = getCatalogGroup(catalog, group);
+  const sub = getCatalogSubcategoryBySlug(catalog, group, subcategory);
 
   if (!shopGroup || !sub) {
     notFound();
   }
 
-  const products = getProductsBySubcategorySlug(group, subcategory);
+  const products = getCatalogProductsBySubcategory(catalog, group, subcategory);
 
   return (
     <>

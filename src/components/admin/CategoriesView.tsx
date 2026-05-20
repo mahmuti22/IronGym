@@ -1,29 +1,144 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAdmin } from "./AdminProvider";
 import { AdminCard, adminInputClass, adminLabelClass } from "./admin-ui";
-import { getGroupPath, getSubcategoryPath } from "@/data/shop";
+import { countProductsForCategory } from "@/lib/admin/categories";
+import { slugify } from "@/lib/admin/mappers";
+import { categoryPathSlug } from "@/lib/shop/category-utils";
+import { getGroupPath, shopFilterLabels } from "@/data/shop";
+import type { AdminCategory } from "@/lib/admin/types";
+import type { ShopFilterGroup } from "@/data/shop";
+
+const GROUP_ORDER: ShopFilterGroup[] = [
+  "uomo",
+  "donna",
+  "accessori",
+  "collezioni",
+];
+
+type FormState = {
+  id?: string;
+  name: string;
+  slug: string;
+  description: string;
+  imageUrl: string;
+  parentId: string | null;
+  groupSlug: ShopFilterGroup;
+  status: string;
+  sortOrder: number;
+};
+
+const emptyForm = (group: ShopFilterGroup, parentId: string | null): FormState => ({
+  name: "",
+  slug: "",
+  description: "",
+  imageUrl: "",
+  parentId,
+  groupSlug: group,
+  status: "visible",
+  sortOrder: 0,
+});
 
 export function CategoriesView() {
   const {
-    groups,
-    categorySubcategories,
-    updateGroup,
-    updateSubcategory,
+    categories,
     dataSource,
     loading,
+    saveCategory,
+    deleteCategoryById,
   } = useAdmin();
-  const [editingGroup, setEditingGroup] = useState<string | null>(null);
-  const [editingSub, setEditingSub] = useState<string | null>(null);
-  const [savingSub, setSavingSub] = useState(false);
 
-  async function saveSubcategory(id: string) {
-    setSavingSub(true);
-    await updateSubcategory(id, {});
-    setSavingSub(false);
-    setEditingSub(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({
+    uomo: true,
+    donna: true,
+    accessori: true,
+    collezioni: true,
+  });
+  const [form, setForm] = useState<FormState | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const topByGroup = useMemo(() => {
+    const map = new Map<ShopFilterGroup, AdminCategory>();
+    for (const g of GROUP_ORDER) {
+      const top =
+        categories.find((c) => !c.parentId && c.slug === g) ??
+        categories.find((c) => !c.parentId && c.groupSlug === g);
+      if (top) map.set(g, top);
+    }
+    return map;
+  }, [categories]);
+
+  const childrenByGroup = useMemo(() => {
+    const map = new Map<ShopFilterGroup, AdminCategory[]>();
+    for (const g of GROUP_ORDER) {
+      const parent = topByGroup.get(g);
+      const children = categories
+        .filter((c) => c.parentId != null && c.groupSlug === g)
+        .sort((a, b) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+      map.set(g, children);
+      if (!parent && children.length === 0) map.set(g, []);
+    }
+    return map;
+  }, [categories, topByGroup]);
+
+  function openCreateParent(group: ShopFilterGroup) {
+    setForm(emptyForm(group, null));
+  }
+
+  function openCreateChild(group: ShopFilterGroup) {
+    const parent = topByGroup.get(group);
+    setForm(emptyForm(group, parent?.id ?? null));
+  }
+
+  function openEdit(cat: AdminCategory) {
+    setForm({
+      id: cat.id,
+      name: cat.name,
+      slug: cat.slug,
+      description: cat.description ?? "",
+      imageUrl: cat.imageUrl ?? "",
+      parentId: cat.parentId,
+      groupSlug: (cat.groupSlug ?? "uomo") as ShopFilterGroup,
+      status: cat.status,
+      sortOrder: cat.sortOrder,
+    });
+  }
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form) return;
+    setSaving(true);
+    await saveCategory({
+      id: form.id,
+      slug: form.slug.trim() || slugify(form.name),
+      name: form.name.trim(),
+      description: form.description.trim() || null,
+      imageUrl: form.imageUrl.trim() || null,
+      parentId: form.parentId,
+      groupSlug: form.groupSlug,
+      status: form.status,
+      sortOrder: form.sortOrder,
+    });
+    setSaving(false);
+    setForm(null);
+  }
+
+  async function handleDelete(cat: AdminCategory) {
+    const count =
+      dataSource === "supabase"
+        ? await countProductsForCategory(cat.id)
+        : 0;
+
+    const msg =
+      count > 0
+        ? `"${cat.name}" ha ${count} prodotto/i collegati. Eliminarla comunque? I prodotti resteranno senza quel collegamento.`
+        : `Eliminare "${cat.name}"?`;
+
+    if (!window.confirm(msg)) return;
+
+    await deleteCategoryById(cat.id);
   }
 
   if (loading) {
@@ -32,161 +147,282 @@ export function CategoriesView() {
     );
   }
 
-  const shopGroupsOnly = groups.filter((g) => g.slug !== "collezioni");
-
   return (
-    <div className="space-y-8">
-      <section>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-silver-500">
-          Categorie principali
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {shopGroupsOnly.map((group) => (
-            <AdminCard key={group.slug} className="p-5">
-              {editingGroup === group.slug ? (
-                <div className="space-y-3">
-                  <input
-                    value={group.title}
-                    onChange={(e) =>
-                      updateGroup(group.slug, { title: e.target.value })
-                    }
-                    className={adminInputClass}
-                  />
-                  <textarea
-                    rows={3}
-                    value={group.description}
-                    onChange={(e) =>
-                      updateGroup(group.slug, {
-                        description: e.target.value,
-                      })
-                    }
-                    className={adminInputClass}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setEditingGroup(null)}
-                    className="text-xs font-semibold text-silver-400 hover:text-white"
-                  >
-                    Fine modifica
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <h3 className="text-lg font-semibold text-silver-200">
-                    {group.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-silver-500 line-clamp-3">
-                    {group.description}
-                  </p>
-                  <p className="mt-2 text-xs text-silver-600">/{group.slug}</p>
-                  <div className="mt-4 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setEditingGroup(group.slug)}
-                      className="text-xs font-semibold text-silver-400 hover:text-white"
-                    >
-                      Modifica
-                    </button>
-                    <Link
-                      href={getGroupPath(group.slug)}
-                      target="_blank"
-                      className="text-xs font-semibold text-silver-500 hover:text-silver-300"
-                    >
-                      Vedi shop →
-                    </Link>
-                  </div>
-                </>
-              )}
-            </AdminCard>
-          ))}
-        </div>
-      </section>
+    <div className="space-y-6">
+      {dataSource === "mock" && (
+        <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          Supabase non configurato — le modifiche restano solo in memoria.
+        </p>
+      )}
 
-      <section>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-silver-500">
-          Sottocategorie ({categorySubcategories.length})
-        </h2>
-        <div className="space-y-3">
-          {categorySubcategories.map((sub) => (
-            <AdminCard key={sub.id} className="p-4">
-              {editingSub === sub.id ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className={adminLabelClass}>Titolo</label>
-                    <input
-                      value={sub.title}
-                      onChange={(e) =>
-                        updateSubcategory(sub.id, { title: e.target.value })
-                      }
-                      className={adminInputClass}
-                    />
+      {form && (
+        <AdminCard className="p-6">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-silver-500">
+            {form.id ? "Modifica categoria" : "Nuova categoria"}
+          </h3>
+          <form onSubmit={handleSave} className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className={adminLabelClass}>Nome *</label>
+              <input
+                required
+                value={form.name}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f
+                      ? {
+                          ...f,
+                          name: e.target.value,
+                          slug: f.slug || slugify(e.target.value),
+                        }
+                      : f
+                  )
+                }
+                className={adminInputClass}
+              />
+            </div>
+            <div>
+              <label className={adminLabelClass}>Slug *</label>
+              <input
+                required
+                value={form.slug}
+                onChange={(e) =>
+                  setForm((f) => (f ? { ...f, slug: e.target.value } : f))
+                }
+                className={adminInputClass}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={adminLabelClass}>Descrizione</label>
+              <textarea
+                rows={2}
+                value={form.description}
+                onChange={(e) =>
+                  setForm((f) => (f ? { ...f, description: e.target.value } : f))
+                }
+                className={adminInputClass}
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className={adminLabelClass}>URL immagine</label>
+              <input
+                value={form.imageUrl}
+                onChange={(e) =>
+                  setForm((f) => (f ? { ...f, imageUrl: e.target.value } : f))
+                }
+                className={adminInputClass}
+                placeholder="https://…"
+              />
+            </div>
+            <div>
+              <label className={adminLabelClass}>Gruppo</label>
+              <select
+                value={form.groupSlug}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f
+                      ? {
+                          ...f,
+                          groupSlug: e.target.value as ShopFilterGroup,
+                        }
+                      : f
+                  )
+                }
+                className={adminInputClass}
+                disabled={Boolean(form.parentId)}
+              >
+                {GROUP_ORDER.map((g) => (
+                  <option key={g} value={g}>
+                    {shopFilterLabels[g]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className={adminLabelClass}>Stato</label>
+              <select
+                value={form.status}
+                onChange={(e) =>
+                  setForm((f) => (f ? { ...f, status: e.target.value } : f))
+                }
+                className={adminInputClass}
+              >
+                <option value="visible">Visibile</option>
+                <option value="hidden">Nascosta</option>
+              </select>
+            </div>
+            <div>
+              <label className={adminLabelClass}>Ordine</label>
+              <input
+                type="number"
+                value={form.sortOrder}
+                onChange={(e) =>
+                  setForm((f) =>
+                    f ? { ...f, sortOrder: Number(e.target.value) } : f
+                  )
+                }
+                className={adminInputClass}
+              />
+            </div>
+            <div className="flex flex-wrap gap-3 sm:col-span-2">
+              <button
+                type="submit"
+                disabled={saving}
+                className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-iron-950 disabled:opacity-50"
+              >
+                {saving ? "Salvataggio…" : "Salva"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm(null)}
+                className="text-sm font-semibold text-silver-500 hover:text-silver-300"
+              >
+                Annulla
+              </button>
+            </div>
+          </form>
+        </AdminCard>
+      )}
+
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="button"
+          onClick={() => openCreateParent("uomo")}
+          className="rounded-full border border-silver-500/35 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-silver-400 hover:text-white"
+        >
+          + Categoria principale
+        </button>
+      </div>
+
+      {GROUP_ORDER.map((group) => {
+        const parent = topByGroup.get(group);
+        const children = childrenByGroup.get(group) ?? [];
+        const isOpen = expanded[group] ?? true;
+
+        return (
+          <AdminCard key={group} className="overflow-hidden">
+            <button
+              type="button"
+              onClick={() =>
+                setExpanded((e) => ({ ...e, [group]: !isOpen }))
+              }
+              className="flex w-full items-center justify-between gap-4 border-b border-white/[0.06] bg-white/[0.03] px-5 py-4 text-left"
+            >
+              <div>
+                <h3 className="text-lg font-semibold text-silver-200">
+                  {shopFilterLabels[group]}
+                </h3>
+                <p className="text-xs text-silver-600">
+                  {children.length} sottocategorie
+                  {parent ? ` · principale: ${parent.name}` : " · principale non creata"}
+                </p>
+              </div>
+              <span className="text-silver-500">{isOpen ? "−" : "+"}</span>
+            </button>
+
+            {isOpen && (
+              <div className="space-y-4 p-5">
+                {parent ? (
+                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-silver-200">
+                          {parent.name}
+                        </p>
+                        <p className="text-xs text-silver-600">
+                          /{parent.slug} · {parent.status}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openEdit(parent)}
+                          className="text-xs font-semibold text-silver-400 hover:text-white"
+                        >
+                          Modifica
+                        </button>
+                        <Link
+                          href={getGroupPath(group)}
+                          target="_blank"
+                          className="text-xs font-semibold text-silver-500 hover:text-silver-300"
+                        >
+                          Shop →
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className={adminLabelClass}>Slug</label>
-                    <input
-                      value={sub.slug}
-                      onChange={(e) =>
-                        updateSubcategory(sub.id, { slug: e.target.value })
-                      }
-                      className={adminInputClass}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className={adminLabelClass}>Descrizione</label>
-                    <textarea
-                      rows={2}
-                      value={sub.description}
-                      onChange={(e) =>
-                        updateSubcategory(sub.id, {
-                          description: e.target.value,
-                        })
-                      }
-                      className={adminInputClass}
-                    />
-                  </div>
+                ) : (
                   <button
                     type="button"
-                    disabled={savingSub}
-                    onClick={() => saveSubcategory(sub.id)}
-                    className="text-xs font-semibold text-silver-400 sm:col-span-2 disabled:opacity-50"
+                    onClick={() => openCreateParent(group)}
+                    className="text-sm text-silver-500 hover:text-silver-300"
                   >
-                    {savingSub
-                      ? "Salvataggio…"
-                      : dataSource === "supabase"
-                        ? "Salva nel database"
-                        : "Salva (mock locale)"}
+                    Crea categoria principale «{shopFilterLabels[group]}»
                   </button>
-                </div>
-              ) : (
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <p className="font-medium text-silver-200">{sub.title}</p>
-                    <p className="text-xs text-silver-600">
-                      /shop/{sub.filterGroup}/{sub.slug}
+                )}
+
+                <div className="space-y-2">
+                  {children.length === 0 ? (
+                    <p className="text-sm text-silver-600">
+                      Nessuna sottocategoria. Aggiungine una per il form
+                      prodotto.
                     </p>
-                  </div>
-                  <div className="flex gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setEditingSub(sub.id)}
-                      className="text-xs font-semibold text-silver-400 hover:text-white"
-                    >
-                      Modifica
-                    </button>
-                    <Link
-                      href={getSubcategoryPath(sub)}
-                      target="_blank"
-                      className="text-xs font-semibold text-silver-500 hover:text-silver-300"
-                    >
-                      Vedi →
-                    </Link>
-                  </div>
+                  ) : (
+                    children.map((child) => (
+                      <div
+                        key={child.id}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.06] px-4 py-3"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-silver-300">
+                            {child.name}
+                          </p>
+                          <p className="text-xs text-silver-600">
+                            /shop/{group}/
+                            {categoryPathSlug(child.slug, child.groupSlug)} ·{" "}
+                            {child.status}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openEdit(child)}
+                            className="text-xs font-semibold text-silver-400 hover:text-white"
+                          >
+                            Modifica
+                          </button>
+                          <Link
+                            href={`/shop/${group}/${categoryPathSlug(child.slug, child.groupSlug)}`}
+                            target="_blank"
+                            className="text-xs font-semibold text-silver-500 hover:text-silver-300"
+                          >
+                            Vedi →
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(child)}
+                            className="text-xs font-semibold text-red-400/80 hover:text-red-300"
+                          >
+                            Elimina
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-              )}
-            </AdminCard>
-          ))}
-        </div>
-      </section>
+
+                <button
+                  type="button"
+                  onClick={() => openCreateChild(group)}
+                  disabled={!parent}
+                  className="text-xs font-semibold uppercase tracking-wider text-silver-400 hover:text-white disabled:opacity-40"
+                >
+                  + Aggiungi sottocategoria
+                </button>
+              </div>
+            )}
+          </AdminCard>
+        );
+      })}
     </div>
   );
 }

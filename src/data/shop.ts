@@ -14,6 +14,8 @@ export type ShopSubcategory = {
   filterGroup: ShopFilterGroup;
   /** Indice per ritaglio immagine lookbook condivisa */
   imageFocusIndex: number;
+  /** Slug completo in DB (es. uomo-t-shirt) quando diverso da slug URL */
+  dbSlug?: string;
 };
 
 export type ShopGroup = {
@@ -85,6 +87,10 @@ export type ShopProduct = {
   material?: string;
   fit?: string;
   careInstructions?: string;
+  /** Slug segmento URL sottocategoria */
+  subcategorySlug?: string | null;
+  categoryUuid?: string | null;
+  subcategoryUuid?: string | null;
 };
 
 export const shopFilterLabels: Record<ShopFilterGroup, string> = {
@@ -357,7 +363,7 @@ export function formatPrice(chf: number): string {
   return `CHF ${chf}`;
 }
 
-function applyProductDefaults(product: ShopProduct): ShopProduct {
+export function applyProductDefaults(product: ShopProduct): ShopProduct {
   const isAccessory = product.filterGroup === "accessori";
   const isOversize = product.name.toLowerCase().includes("oversize");
 

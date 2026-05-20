@@ -44,27 +44,17 @@ type SubcategoryOption = { id: string; title: string };
 
 export function ProductForm() {
   const router = useRouter();
-  const { addProduct, subcategories, categories, dataSource } = useAdmin();
+  const { addProduct, subcategories, dataSource } = useAdmin();
   const [form, setForm] = useState(emptyForm);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const subsForGroup = useMemo((): SubcategoryOption[] => {
-    if (dataSource === "supabase") {
-      return categories
-        .filter(
-          (c) =>
-            c.groupSlug === form.filterGroup &&
-            c.parentId != null &&
-            c.groupSlug !== "collezioni"
-        )
-        .map((c) => ({ id: c.id, title: c.name }));
-    }
     return subcategories
       .filter((s) => s.filterGroup === form.filterGroup)
       .map((s) => ({ id: s.id, title: s.title }));
-  }, [categories, subcategories, form.filterGroup, dataSource]);
+  }, [subcategories, form.filterGroup]);
 
   const hasSubcategories = subsForGroup.length > 0;
 
@@ -255,22 +245,7 @@ export function ProductForm() {
                     const subs = subcategories.filter(
                       (s) => s.filterGroup === g
                     );
-                    const childSubs =
-                      dataSource === "supabase"
-                        ? categories.filter(
-                            (c) => c.groupSlug === g && c.parentId != null
-                          )
-                        : [];
-                    if (dataSource === "supabase") {
-                      update(
-                        "subcategoryId",
-                        childSubs[0]?.id ?? ""
-                      );
-                    } else if (subs[0]) {
-                      update("subcategoryId", subs[0].id);
-                    } else {
-                      update("subcategoryId", "");
-                    }
+                    update("subcategoryId", subs[0]?.id ?? "");
                   }}
                   className={adminInputClass}
                 >

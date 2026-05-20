@@ -8,12 +8,17 @@ import { CategoryCard } from "@/components/shop/CategoryCard";
 import { ProductGrid } from "@/components/shop/ProductGrid";
 import {
   MAIN_CATEGORY,
-  getAllGroupSlugs,
-  getProductsByGroupSlug,
-  getShopGroupBySlug,
-  getSubcategoriesByGroupSlug,
   SHOP_RESERVED_SEGMENTS,
+  getAllGroupSlugs,
 } from "@/data/shop";
+import {
+  getCatalogGroup,
+  getCatalogProductsByGroup,
+  getCatalogSubcategoriesByGroup,
+  getShopCatalog,
+} from "@/lib/shop/catalog";
+
+export const revalidate = 60;
 
 type PageProps = {
   params: Promise<{ group: string }>;
@@ -25,7 +30,8 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { group } = await params;
-  const shopGroup = getShopGroupBySlug(group);
+  const catalog = await getShopCatalog();
+  const shopGroup = getCatalogGroup(catalog, group);
   if (!shopGroup) return { title: "Categoria non trovata — IronGym" };
   return {
     title: `${shopGroup.title} — Shop IronGym`,
@@ -40,13 +46,14 @@ export default async function ShopGroupPage({ params }: PageProps) {
     notFound();
   }
 
-  const shopGroup = getShopGroupBySlug(group);
+  const catalog = await getShopCatalog();
+  const shopGroup = getCatalogGroup(catalog, group);
   if (!shopGroup) {
     notFound();
   }
 
-  const subcategories = getSubcategoriesByGroupSlug(group);
-  const products = getProductsByGroupSlug(group);
+  const subcategories = getCatalogSubcategoriesByGroup(catalog, group);
+  const products = getCatalogProductsByGroup(catalog, group);
 
   return (
     <>
@@ -85,11 +92,17 @@ export default async function ShopGroupPage({ params }: PageProps) {
             >
               Sottocategorie
             </h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {subcategories.map((sub) => (
-                <CategoryCard key={sub.id} category={sub} />
-              ))}
-            </div>
+            {subcategories.length === 0 ? (
+              <p className="mt-6 text-sm text-silver-500">
+                Nessuna sottocategoria per questa linea.
+              </p>
+            ) : (
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {subcategories.map((sub) => (
+                  <CategoryCard key={sub.id} category={sub} />
+                ))}
+              </div>
+            )}
           </section>
 
           <section
