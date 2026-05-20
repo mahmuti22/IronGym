@@ -89,7 +89,7 @@ export function Features() {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-silver-600">
               Engineering
             </p>
-            <h2 className="mt-3 font-display text-4xl tracking-wide text-silver-300 sm:text-5xl">
+            <h2 className="mt-3 font-display ig-title-shimmer text-4xl tracking-wide sm:text-5xl">
               No noise. Only signal.
             </h2>
           </div>
@@ -98,17 +98,19 @@ export function Features() {
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           {features.map((f, i) => (
             <Reveal key={f.title} delay={i * 0.05}>
-              <div className="group flex h-full gap-5 rounded-2xl border border-silver-600/28 bg-iron-900/35 p-6 transition duration-500 hover:border-silver-400/50 hover:bg-iron-900/55 hover:shadow-[0_0_40px_rgba(0,0,0,0.35)] sm:p-7">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-silver-500/35 bg-white/[0.03] text-silver-400 transition group-hover:border-silver-300/45 group-hover:text-silver-300">
-                  {f.icon}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-silver-300">
-                    {f.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-silver-600">
-                    {f.body}
-                  </p>
+              <div className="ig-tilt-wrap h-full">
+                <div className="ig-tilt-sm group flex h-full gap-5 rounded-2xl p-6 sm:p-7">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-silver-400/40 bg-white/[0.08] text-silver-400 transition group-hover:border-silver-300/55 group-hover:text-silver-200">
+                    {f.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-silver-200">
+                      {f.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-silver-500">
+                      {f.body}
+                    </p>
+                  </div>
                 </div>
               </div>
             </Reveal>

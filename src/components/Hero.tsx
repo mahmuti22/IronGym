@@ -30,11 +30,11 @@ export function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-5xl leading-[0.95] text-silver-300 sm:text-6xl lg:text-7xl"
+            className="font-display ig-title-shimmer text-5xl leading-[0.95] sm:text-6xl lg:text-7xl"
           >
             Built for Iron.
             <br />
-            <span className="text-white">Made for Motion.</span>
+            Made for Motion.
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 16 }}
@@ -87,29 +87,30 @@ export function Hero() {
           initial={{ opacity: 0, scale: 0.98, y: 24 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          className="relative"
+          className="relative ig-tilt-wrap"
         >
-          <div className="metal-border metal-glow relative overflow-hidden rounded-2xl bg-gradient-to-br from-iron-850 via-iron-900 to-iron-950 p-[1px]">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-iron-900 sm:aspect-[5/6]">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(214,214,214,0.12),transparent_45%),linear-gradient(145deg,rgba(17,17,17,0.9),rgba(5,5,5,0.95))]" />
+          <div className="ig-tilt metal-glow relative rounded-2xl">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl sm:aspect-[5/6]">
+              <div className="absolute inset-0 ig-card-inner" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(214,214,214,0.14),transparent_48%),linear-gradient(145deg,rgba(38,38,44,0.95),rgba(22,22,28,0.98))]" />
               <div className="absolute inset-0 opacity-[0.35] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:22px_22px]" />
 
               <div className="relative flex h-full flex-col justify-end p-6 sm:p-8">
                 <div className="mb-auto pt-6">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-silver-500 backdrop-blur-md">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-silver-500/35 bg-white/[0.08] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-silver-400 backdrop-blur-md">
                     <span className="h-1.5 w-1.5 rounded-full bg-silver-400/90 shadow-[0_0_14px_rgba(214,214,214,0.35)]" />
                     In stock — limited run
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-silver-400/25 bg-black/40 p-4 backdrop-blur-md sm:p-5">
+                <div className="rounded-xl border border-silver-400/45 ig-card-inner p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.25)_inset] backdrop-blur-md sm:p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silver-600">
                     Visual drop
                   </p>
-                  <p className="mt-2 font-display text-3xl tracking-wide text-white sm:text-4xl">
+                  <p className="mt-2 font-display ig-title-shimmer text-3xl tracking-wide sm:text-4xl">
                     HEAVY SILENCE
                   </p>
-                  <p className="mt-2 text-sm text-silver-500">
+                  <p className="mt-2 text-sm text-silver-400">
                     Matte black kit. Cold steel details. Built to look sharp
                     under any bar.
                   </p>
@@ -117,7 +118,7 @@ export function Hero() {
               </div>
             </div>
           </div>
-          <div className="pointer-events-none absolute -bottom-6 -right-4 hidden h-28 w-28 rounded-full border border-silver-400/20 sm:block" />
+          <div className="pointer-events-none absolute -bottom-6 -right-4 hidden h-28 w-28 rounded-full border border-silver-400/35 sm:block" />
         </motion.div>
       </div>
     </section>
