@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { IronGymMark } from "./IronGymMark";
 
 type FooterLink = { href: string; label: string };
 
@@ -18,7 +19,7 @@ const columns: { title: string; links: FooterLink[] }[] = [
     title: "IronGym für dich",
     links: [
       { href: "/#contact", label: "Mitgliedervorteile" },
-      { href: "/#contact", label: "Mein Konto" },
+      { href: "/login", label: "Mein Konto" },
       { href: "/#contact", label: "Studentenrabatt" },
       { href: "/#contact", label: "Newsletter" },
     ],
@@ -97,9 +98,10 @@ export function Footer() {
             className="group shrink-0 self-start lg:self-center"
             aria-label="IronGym — Home"
           >
-            <span className="font-display block text-[clamp(3.25rem,14vw,9rem)] leading-[0.82] tracking-[0.02em] text-white transition group-hover:text-silver-300">
-              Iron<span className="text-silver-500">Gym</span>
-            </span>
+            <IronGymMark
+              shimmer
+              className="block text-[clamp(3.25rem,14vw,9rem)] text-white transition group-hover:opacity-90"
+            />
           </Link>
         </div>
 

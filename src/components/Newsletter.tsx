@@ -26,8 +26,10 @@ export function Newsletter() {
                   <p className="text-xs font-semibold uppercase tracking-[0.35em] text-silver-600">
                     Inner circle
                   </p>
-                  <h2 className="mt-3 font-display ig-title-shimmer text-4xl tracking-wide sm:text-5xl">
-                    Join the IronGym Movement
+                  <h2 className="mt-3 text-4xl leading-[1.15] tracking-tight sm:text-5xl">
+                    <span className="ig-brand-wordmark ig-title-shimmer text-4xl sm:text-5xl">
+                      Join the IronGym Movement
+                    </span>
                   </h2>
                   <p className="mt-4 text-silver-500">
                     Early access to drops, restocks in CH, and training notes from

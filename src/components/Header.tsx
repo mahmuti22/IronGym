@@ -7,6 +7,7 @@ const nav = [
   { href: "/", label: "Home" },
   { href: "/#collection", label: "Collection" },
   { href: "/about", label: "About" },
+  { href: "/login", label: "Login" },
   { href: "/#contact", label: "Contact" },
 ];
 
@@ -18,7 +19,7 @@ export function Header() {
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="text-xl font-bold tracking-tight text-silver-200 transition hover:text-white sm:text-2xl"
+          className="inline-block text-xl font-bold leading-[1.2] tracking-tight text-silver-200 transition hover:text-white sm:text-2xl"
         >
           Iron<span className="text-silver-500">Gym</span>
         </Link>
@@ -85,6 +86,13 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="rounded-lg px-3 py-3 text-sm font-medium text-silver-400 transition hover:bg-white/[0.04] hover:text-silver-300"
+              >
+                Login
+              </Link>
               <Link
                 href="/#collection"
                 onClick={() => setOpen(false)}

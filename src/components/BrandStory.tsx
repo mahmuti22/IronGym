@@ -1,4 +1,5 @@
 import { Reveal } from "./Reveal";
+import { IronGymMark } from "./IronGymMark";
 
 export function BrandStory() {
   return (
@@ -63,7 +64,7 @@ export function BrandStory() {
                       <p className="text-xs font-semibold uppercase tracking-[0.3em] text-silver-600">
                         Brand code
                       </p>
-                      <p className="mt-2 font-display ig-title-shimmer text-4xl">IRON</p>
+                      <IronGymMark shimmer className="mt-2 block text-4xl" />
                     </div>
                     <div className="rounded-xl border border-silver-400/45 ig-card-inner px-4 py-3 text-right shadow-[0_0_0_1px_rgba(0,0,0,0.2)_inset] backdrop-blur">
                       <p className="text-[10px] font-semibold uppercase tracking-widest text-silver-600">

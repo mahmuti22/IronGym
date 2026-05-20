@@ -166,6 +166,24 @@
     -webkit-box-decoration-break: clone;
     filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.35));
   }
+
+  /* IronGym nei titoli grandi: CamelCase (Bebas Neue è solo maiuscole) */
+  .ig-brand-wordmark {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    text-transform: none;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    display: inline-block;
+    overflow: visible;
+    padding-bottom: 0.08em;
+  }
+
+  /* Evita che shimmer + background-clip:text taglino discendenti (es. la «y») */
+  .ig-brand-wordmark.ig-title-shimmer {
+    line-height: 1.2;
+    padding-bottom: 0.12em;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

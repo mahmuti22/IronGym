@@ -45,8 +45,10 @@ export function ProductSection() {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-silver-600">
               Drop 01
             </p>
-            <h2 className="mt-3 font-display ig-title-shimmer text-4xl tracking-wide sm:text-5xl">
-              IronGym Collection
+            <h2 className="mt-3 text-4xl leading-[1.15] tracking-tight sm:text-5xl">
+              <span className="ig-brand-wordmark ig-title-shimmer text-4xl sm:text-5xl">
+                IronGym Collection
+              </span>
             </h2>
             <p className="mt-4 text-silver-500">
               Four core pieces engineered for training — minimal outside the gym,

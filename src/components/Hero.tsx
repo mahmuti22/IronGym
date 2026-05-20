@@ -26,7 +26,9 @@ export function Hero() {
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             className="mb-4 text-xs font-semibold uppercase tracking-[0.35em] text-silver-600"
           >
-            IronGym — Swiss engineered attitude
+            <span className="normal-case tracking-[0.2em]">IronGym</span>
+            {" "}
+            — Swiss engineered attitude
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

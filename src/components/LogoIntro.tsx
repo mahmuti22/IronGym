@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { IronGymMark } from "./IronGymMark";
 
 export function LogoIntro() {
   return (
@@ -27,9 +28,9 @@ export function LogoIntro() {
       >
         <Link
           href="/"
-          className="font-display ig-title-shimmer text-[clamp(4rem,18vw,9rem)] leading-[0.9] tracking-wide text-silver-200 transition hover:text-white"
+          className="inline-block text-[clamp(4rem,18vw,9rem)] text-silver-200 transition hover:text-white"
         >
-          Iron<span className="text-silver-500">Gym</span>
+          <IronGymMark shimmer className="text-[clamp(4rem,18vw,9rem)]" />
         </Link>
         <p className="mt-6 text-xs font-semibold uppercase tracking-[0.4em] text-silver-600">
           Stronger everyday
