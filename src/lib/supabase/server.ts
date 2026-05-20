@@ -21,7 +21,7 @@ export async function createServerSupabaseClient(): Promise<SupabaseClient<Datab
             cookieStore.set(name, value, options);
           });
         } catch {
-          // Called from a Server Component; middleware will refresh the session.
+          // Server Component — session refresh handled in middleware.
         }
       },
     },

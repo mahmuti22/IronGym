@@ -14,9 +14,13 @@ type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 
 function resolveSubcategoryUuid(
-  subcategoryId: string,
+  subcategoryId: string | null | undefined,
   categories: AdminCategory[]
 ): string | null {
+  if (subcategoryId == null || subcategoryId.trim() === "") {
+    return null;
+  }
+
   const byId = categories.find((c) => c.id === subcategoryId);
   if (byId) return byId.id;
 
@@ -102,7 +106,7 @@ export async function createProduct(
     `product-${Date.now()}`;
 
   const subcategoryUuid = resolveSubcategoryUuid(
-    input.subcategoryId ?? "",
+    input.subcategoryId,
     categories
   );
   const categoryUuid = resolveCategoryUuid(
@@ -186,10 +190,8 @@ export async function updateProduct(
   if (input.stockStatus != null) payload.stock_status = input.stockStatus;
   if (input.image != null) payload.main_image_url = input.image;
 
-  if (input.subcategoryId != null || input.filterGroup != null) {
-    const subUuid = input.subcategoryId
-      ? resolveSubcategoryUuid(input.subcategoryId, categories)
-      : null;
+  if (input.subcategoryId !== undefined || input.filterGroup != null) {
+    const subUuid = resolveSubcategoryUuid(input.subcategoryId, categories);
     const catUuid = resolveCategoryUuid(
       input.filterGroup ?? "uomo",
       subUuid,

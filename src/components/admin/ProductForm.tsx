@@ -40,24 +40,46 @@ const emptyForm = {
   imageFocusIndex: 0,
 };
 
+type SubcategoryOption = { id: string; title: string };
+
 export function ProductForm() {
   const router = useRouter();
-  const { addProduct, subcategories, dataSource } = useAdmin();
+  const { addProduct, subcategories, categories, dataSource } = useAdmin();
   const [form, setForm] = useState(emptyForm);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const subsForGroup = useMemo(
-    () => subcategories.filter((s) => s.filterGroup === form.filterGroup),
-    [subcategories, form.filterGroup]
-  );
+  const subsForGroup = useMemo((): SubcategoryOption[] => {
+    if (dataSource === "supabase") {
+      return categories
+        .filter(
+          (c) =>
+            c.groupSlug === form.filterGroup &&
+            c.parentId != null &&
+            c.groupSlug !== "collezioni"
+        )
+        .map((c) => ({ id: c.id, title: c.name }));
+    }
+    return subcategories
+      .filter((s) => s.filterGroup === form.filterGroup)
+      .map((s) => ({ id: s.id, title: s.title }));
+  }, [categories, subcategories, form.filterGroup, dataSource]);
+
+  const hasSubcategories = subsForGroup.length > 0;
 
   useEffect(() => {
-    if (!form.subcategoryId && subsForGroup[0]) {
+    if (!hasSubcategories) {
+      if (form.subcategoryId !== "") {
+        setForm((f) => ({ ...f, subcategoryId: "" }));
+      }
+      return;
+    }
+    const stillValid = subsForGroup.some((s) => s.id === form.subcategoryId);
+    if (!stillValid) {
       setForm((f) => ({ ...f, subcategoryId: subsForGroup[0].id }));
     }
-  }, [form.filterGroup, form.subcategoryId, subsForGroup]);
+  }, [form.filterGroup, form.subcategoryId, subsForGroup, hasSubcategories]);
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -104,7 +126,7 @@ export function ProductForm() {
       longDescription: form.longDescription.trim() || form.description.trim(),
       mainCategory: MAIN_CATEGORY,
       categoryId: null,
-      subcategoryId: form.subcategoryId,
+      subcategoryId: form.subcategoryId.trim() || null,
       filterGroup: form.filterGroup,
       gender: form.gender,
       price: Number(form.price) || 0,
@@ -230,10 +252,25 @@ export function ProductForm() {
                   onChange={(e) => {
                     const g = e.target.value as ShopFilterGroup;
                     update("filterGroup", g);
-                    const first = subcategories.find(
+                    const subs = subcategories.filter(
                       (s) => s.filterGroup === g
                     );
-                    if (first) update("subcategoryId", first.id);
+                    const childSubs =
+                      dataSource === "supabase"
+                        ? categories.filter(
+                            (c) => c.groupSlug === g && c.parentId != null
+                          )
+                        : [];
+                    if (dataSource === "supabase") {
+                      update(
+                        "subcategoryId",
+                        childSubs[0]?.id ?? ""
+                      );
+                    } else if (subs[0]) {
+                      update("subcategoryId", subs[0].id);
+                    } else {
+                      update("subcategoryId", "");
+                    }
                   }}
                   className={adminInputClass}
                 >
@@ -245,19 +282,29 @@ export function ProductForm() {
                 </select>
               </div>
               <div>
-                <label className={adminLabelClass}>Sottocategoria *</label>
+                <label className={adminLabelClass}>
+                  Sottocategoria{hasSubcategories ? "" : " (opzionale)"}
+                </label>
                 <select
-                  required
                   value={form.subcategoryId}
                   onChange={(e) => update("subcategoryId", e.target.value)}
                   className={adminInputClass}
+                  disabled={!hasSubcategories}
                 >
-                  <option value="">Seleziona…</option>
-                  {subsForGroup.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.title}
+                  {!hasSubcategories ? (
+                    <option value="">
+                      Nessuna sottocategoria disponibile
                     </option>
-                  ))}
+                  ) : (
+                    <>
+                      <option value="">Sottocategoria opzionale</option>
+                      {subsForGroup.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.title}
+                        </option>
+                      ))}
+                    </>
+                  )}
                 </select>
               </div>
               <div>

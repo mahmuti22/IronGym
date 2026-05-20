@@ -1,10 +1,15 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { getAdminAuthErrorMessage } from "@/lib/admin/auth-messages";
+import {
+  fetchAdminProfile,
+  logAdminAuthDebug,
+  logSupabaseProjectDebug,
+} from "@/lib/admin/auth-check";
 import { adminInputClass, adminLabelClass } from "./admin-ui";
 
 export function AdminLoginForm() {
@@ -15,11 +20,19 @@ export function AdminLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(
-    getAdminAuthErrorMessage(queryError) || null
-  );
+  const [error, setError] = useState<string | null>(null);
 
   const supabaseReady = isSupabaseConfigured();
+
+  useEffect(() => {
+    logSupabaseProjectDebug();
+  }, []);
+
+  useEffect(() => {
+    if (queryError) {
+      setError(getAdminAuthErrorMessage(queryError));
+    }
+  }, [queryError]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,10 +50,26 @@ export function AdminLoginForm() {
     }
 
     setSubmitting(true);
+    logSupabaseProjectDebug();
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+    logAdminAuthDebug("login signInWithPassword", {
+      userId: signInData.user?.id ?? null,
+      userEmail: signInData.user?.email ?? null,
+      session: signInData.session
+        ? {
+            expires_at: signInData.session.expires_at,
+            user_id: signInData.session.user.id,
+          }
+        : null,
+      signInError: signInError
+        ? { message: signInError.message, code: signInError.code }
+        : null,
     });
 
     if (signInError) {
@@ -53,27 +82,60 @@ export function AdminLoginForm() {
       return;
     }
 
-    if (!data.user) {
+    const user = signInData.user;
+    if (!user) {
       setSubmitting(false);
       setError(getAdminAuthErrorMessage("invalid_credentials"));
       return;
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("admin_profiles")
-      .select("id")
-      .eq("id", data.user.id)
-      .maybeSingle();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-    if (profileError || !profile) {
+    logAdminAuthDebug("login getSession after signIn", {
+      userId: session?.user?.id ?? null,
+      userEmail: session?.user?.email ?? null,
+      sessionError: sessionError?.message ?? null,
+    });
+
+    if (!session) {
+      setSubmitting(false);
+      setError(
+        "Sessione non disponibile dopo il login. Ricarica la pagina e riprova."
+      );
+      return;
+    }
+
+    const { isAdmin, profile, error: profileError } = await fetchAdminProfile(
+      supabase,
+      user.id,
+      "login form"
+    );
+
+    logAdminAuthDebug("login admin_profiles result", {
+      isAdmin,
+      profile,
+      profileError: profileError
+        ? {
+            code: profileError.code,
+            message: profileError.message,
+            details: profileError.details,
+          }
+        : null,
+    });
+
+    if (profileError || !isAdmin) {
       await supabase.auth.signOut();
       setSubmitting(false);
       setError(getAdminAuthErrorMessage("access_denied"));
       return;
     }
 
-    router.push("/admin");
+    // Sync auth cookies to server before navigating to protected routes.
     router.refresh();
+    router.replace("/admin");
   }
 
   return (

@@ -7,8 +7,8 @@ import {
   isShopFilterGroup,
 } from "@/data/shop";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createMiddlewareSupabaseClient } from "@/lib/supabase/middleware";
-import { checkIsAdmin } from "@/lib/admin/auth-check";
+import { createMiddlewareSupabaseClientWithResponse } from "@/lib/supabase/middleware";
+import { checkIsAdmin, logAdminAuthDebug } from "@/lib/admin/auth-check";
 
 function handleShopRedirects(request: NextRequest): NextResponse | null {
   const { pathname, searchParams } = request.nextUrl;
@@ -42,6 +42,16 @@ function handleShopRedirects(request: NextRequest): NextResponse | null {
   return null;
 }
 
+function loginRedirect(request: NextRequest, error?: string): NextResponse {
+  const url = request.nextUrl.clone();
+  url.pathname = "/admin/login";
+  url.search = "";
+  if (error) {
+    url.searchParams.set("error", error);
+  }
+  return NextResponse.redirect(url);
+}
+
 async function handleAdminAuth(
   request: NextRequest
 ): Promise<NextResponse> {
@@ -55,44 +65,59 @@ async function handleAdminAuth(
     return NextResponse.next();
   }
 
-  const response = NextResponse.next({ request });
-  const supabase = createMiddlewareSupabaseClient(request, response);
-
-  if (!supabase) {
-    return response;
+  const clientBundle = createMiddlewareSupabaseClientWithResponse(request);
+  if (!clientBundle) {
+    return NextResponse.next();
   }
 
+  const { supabase, getResponse } = clientBundle;
+
+  // Refresh session cookies on the response (required for SSR auth).
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
+
+  logAdminAuthDebug("middleware getUser", {
+    pathname,
+    userId: user?.id ?? null,
+    userEmail: user?.email ?? null,
+    userError: userError?.message ?? null,
+  });
 
   if (isLoginPage) {
     if (user) {
-      const isAdmin = await checkIsAdmin(supabase, user.id);
+      const isAdmin = await checkIsAdmin(
+        supabase,
+        user.id,
+        "middleware /admin/login"
+      );
       if (isAdmin) {
-        return NextResponse.redirect(new URL("/admin", request.url));
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin";
+        url.search = "";
+        return NextResponse.redirect(url);
       }
     }
-    return response;
+    return getResponse();
   }
 
   if (!user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
-    url.searchParams.set("error", "session_required");
-    return NextResponse.redirect(url);
+    return loginRedirect(request, "session_required");
   }
 
-  const isAdmin = await checkIsAdmin(supabase, user.id);
+  const isAdmin = await checkIsAdmin(
+    supabase,
+    user.id,
+    `middleware ${pathname}`
+  );
+
   if (!isAdmin) {
-    await supabase.auth.signOut();
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin/login";
-    url.searchParams.set("error", "access_denied");
-    return NextResponse.redirect(url);
+    logAdminAuthDebug("middleware access denied", { userId: user.id });
+    return loginRedirect(request, "access_denied");
   }
 
-  return response;
+  return getResponse();
 }
 
 export async function middleware(request: NextRequest) {

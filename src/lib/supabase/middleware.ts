@@ -28,3 +28,41 @@ export function createMiddlewareSupabaseClient(
     },
   });
 }
+
+/**
+ * Supabase SSR middleware client — recreates the response when auth cookies refresh.
+ * @see https://supabase.com/docs/guides/auth/server-side/nextjs
+ */
+export function createMiddlewareSupabaseClientWithResponse(
+  request: NextRequest
+): {
+  supabase: SupabaseClient<Database>;
+  getResponse: () => NextResponse;
+} | null {
+  if (!isSupabaseConfigured()) return null;
+
+  const { url, anonKey } = getSupabaseEnv();
+  let response = NextResponse.next({ request });
+
+  const supabase = createServerClient<Database>(url, anonKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => {
+          request.cookies.set(name, value);
+        });
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) => {
+          response.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  return {
+    supabase,
+    getResponse: () => response,
+  };
+}
