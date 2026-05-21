@@ -2,13 +2,32 @@ import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CheckoutPageClient } from "@/components/checkout/CheckoutPageClient";
+import { profileToCheckoutForm } from "@/lib/customer/profile";
+import { fetchCustomerProfile } from "@/lib/customer/auth-check";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Checkout | IronGym",
   description: "Completa il tuo ordine IronGym.",
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  let initialForm = undefined;
+
+  const supabase = await createServerSupabaseClient();
+  if (supabase) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user?.email) {
+      const { profile } = await fetchCustomerProfile(supabase, user.id);
+      if (profile) {
+        initialForm = profileToCheckoutForm(profile, user.email);
+      }
+    }
+  }
+
   return (
     <>
       <Header />
@@ -21,7 +40,7 @@ export default function CheckoutPage() {
             Riepilogo ordine e dati di spedizione — pagamento non ancora attivo.
           </p>
           <div className="mt-10">
-            <CheckoutPageClient />
+            <CheckoutPageClient initialForm={initialForm} />
           </div>
         </div>
       </main>

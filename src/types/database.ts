@@ -30,6 +30,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      customer_profiles: {
+        Row: {
+          id: string;
+          email: string;
+          first_name: string | null;
+          last_name: string | null;
+          phone: string | null;
+          default_address: string | null;
+          default_city: string | null;
+          default_postcode: string | null;
+          default_country: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          email: string;
+          first_name?: string | null;
+          last_name?: string | null;
+          phone?: string | null;
+          default_address?: string | null;
+          default_city?: string | null;
+          default_postcode?: string | null;
+          default_country?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          first_name?: string | null;
+          last_name?: string | null;
+          phone?: string | null;
+          default_address?: string | null;
+          default_city?: string | null;
+          default_postcode?: string | null;
+          default_country?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       categories: {
         Row: {
           id: string;
@@ -241,6 +283,7 @@ export type Database = {
           shipping_postcode: string;
           shipping_country: string;
           customer_notes: string | null;
+          customer_id: string | null;
           internal_notes: string | null;
           tracking_number: string | null;
           shipping_carrier: string | null;
@@ -270,6 +313,7 @@ export type Database = {
           shipping_postcode: string;
           shipping_country: string;
           customer_notes?: string | null;
+          customer_id?: string | null;
           internal_notes?: string | null;
           tracking_number?: string | null;
           shipping_carrier?: string | null;
@@ -299,6 +343,7 @@ export type Database = {
           shipping_postcode?: string;
           shipping_country?: string;
           customer_notes?: string | null;
+          customer_id?: string | null;
           internal_notes?: string | null;
           tracking_number?: string | null;
           shipping_carrier?: string | null;
@@ -373,6 +418,8 @@ export type Database = {
 
 export type DbAdminProfile =
   Database["public"]["Tables"]["admin_profiles"]["Row"];
+export type DbCustomerProfile =
+  Database["public"]["Tables"]["customer_profiles"]["Row"];
 export type DbCategory = Database["public"]["Tables"]["categories"]["Row"];
 export type DbCollection = Database["public"]["Tables"]["collections"]["Row"];
 export type DbProduct = Database["public"]["Tables"]["products"]["Row"];

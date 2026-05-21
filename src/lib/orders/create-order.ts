@@ -4,6 +4,7 @@ import {
   type OrderEmailOrder,
 } from "@/lib/email/order-emails";
 import { createPublicServerSupabaseClient } from "@/lib/supabase/public-server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { CreateOrderRequest, CreateOrderResponse } from "./types";
 import type { CheckoutOrderItemInput } from "./types";
@@ -78,7 +79,20 @@ export async function createOrderFromCheckout(
     return { ok: false, error: "Supabase non configurato." };
   }
 
-  const supabase = createPublicServerSupabaseClient();
+  const serverClient = await createServerSupabaseClient();
+  let customerId: string | null = null;
+  let supabase = createPublicServerSupabaseClient();
+
+  if (serverClient) {
+    const {
+      data: { user },
+    } = await serverClient.auth.getUser();
+    if (user) {
+      customerId = user.id;
+      supabase = serverClient;
+    }
+  }
+
   if (!supabase) {
     return { ok: false, error: "Impossibile connettersi al database." };
   }
@@ -100,6 +114,7 @@ export async function createOrderFromCheckout(
     const { error: orderError } = await supabase.from("orders").insert({
         id: orderId,
         order_number: orderNumber,
+        customer_id: customerId,
         customer_first_name: c.firstName.trim(),
         customer_last_name: c.lastName.trim(),
         customer_email: c.email.trim().toLowerCase(),

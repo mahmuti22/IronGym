@@ -4,13 +4,16 @@ import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/components/cart/CartProvider";
+import { CustomerHeaderAuth } from "@/components/customer/CustomerHeaderAuth";
 import { IRON_GYM_HOME_INTRO_EVENT } from "@/lib/home-intro";
+
+const navLinkClass =
+  "text-sm font-medium text-silver-500 transition hover:text-silver-300";
 
 const nav = [
   { href: "/shop", label: "Shop" },
   { href: "/#abbigliamento", label: "Abbigliamento" },
   { href: "/about", label: "About" },
-  { href: "/login", label: "Login" },
   { href: "/#contact", label: "Contact" },
 ];
 
@@ -86,26 +89,22 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          <Link
-            href="/"
-            onClick={playHomeIntro}
-            className="text-sm font-medium text-silver-500 transition hover:text-silver-300"
-          >
+          <Link href="/" onClick={playHomeIntro} className={navLinkClass}>
             Home
           </Link>
           {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="text-sm font-medium text-silver-500 transition hover:text-silver-300"
-            >
+            <Link key={item.href} href={item.href} className={navLinkClass}>
               {item.label}
             </Link>
           ))}
+          <CustomerHeaderAuth linkClassName={navLinkClass} />
         </nav>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <CartIconLink className={`${cartIconButtonClass} md:h-10 md:w-10`} />
+          <CartIconLink className={cartIconButtonClass} />
+          <CustomerHeaderAuth
+            linkClassName={`${cartIconButtonClass} px-3 text-xs font-semibold md:hidden`}
+          />
 
           <Link
             href="/shop"

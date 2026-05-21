@@ -15,10 +15,16 @@ import {
 
 type Step = "checkout" | "success";
 
-export function CheckoutPageClient() {
+type CheckoutPageClientProps = {
+  initialForm?: CheckoutFormData;
+};
+
+export function CheckoutPageClient({ initialForm }: CheckoutPageClientProps) {
   const { items, ready, subtotal, clear } = useCart();
   const [step, setStep] = useState<Step>("checkout");
-  const [form, setForm] = useState<CheckoutFormData>(emptyCheckoutForm);
+  const [form, setForm] = useState<CheckoutFormData>(
+    initialForm ?? emptyCheckoutForm()
+  );
   const [errors, setErrors] = useState<CheckoutFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
