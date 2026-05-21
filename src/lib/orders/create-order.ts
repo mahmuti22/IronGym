@@ -1,3 +1,8 @@
+import {
+  sendOrderCreatedEmails,
+  type OrderEmailItem,
+  type OrderEmailOrder,
+} from "@/lib/email/order-emails";
 import { createPublicServerSupabaseClient } from "@/lib/supabase/public-server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import type { CreateOrderRequest, CreateOrderResponse } from "./types";
@@ -137,6 +142,38 @@ export async function createOrderFromCheckout(
           ok: false,
           error: itemsError.message || "Errore salvataggio articoli ordine.",
         };
+      }
+
+      const emailOrder: OrderEmailOrder = {
+        id: orderId,
+        orderNumber,
+        customerFirstName: c.firstName.trim(),
+        customerLastName: c.lastName.trim(),
+        customerEmail: c.email.trim().toLowerCase(),
+        customerPhone: c.phone.trim() || null,
+        shippingAddress: c.address.trim(),
+        shippingCity: c.city.trim(),
+        shippingPostcode: c.postcode.trim(),
+        shippingCountry: c.country.trim(),
+        customerNotes: c.notes.trim() || null,
+        subtotal,
+        total,
+        currency: "CHF",
+      };
+
+      const emailItems: OrderEmailItem[] = lines.map((line) => ({
+        name: line.name,
+        size: line.size,
+        color: line.color,
+        quantity: line.quantity,
+        unitPrice: line.unitPrice,
+        lineTotal: line.lineTotal,
+      }));
+
+      try {
+        await sendOrderCreatedEmails(emailOrder, emailItems);
+      } catch (err) {
+        console.error("[IronGym] Order emails failed:", err);
       }
 
       return {
