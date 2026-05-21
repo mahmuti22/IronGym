@@ -7,11 +7,14 @@ import {
   type ShopGender,
   type ShopSubcategory,
 } from "@/data/shop";
+import { extractStoragePathFromUrl } from "./media";
 import type { DbCategory, DbCollection, DbProduct } from "@/types/database";
+import type { DbProductImage } from "@/types/database";
 import type {
   AdminCategory,
   AdminCollection,
   AdminProduct,
+  AdminProductImage,
   ProductStatus,
 } from "@/lib/admin/types";
 import { categoryPathSlug } from "@/lib/shop/category-utils";
@@ -65,9 +68,21 @@ export function mapDbCollection(row: DbCollection): AdminCollection {
   };
 }
 
+function mapDbProductImage(row: DbProductImage): AdminProductImage {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    url: row.url,
+    alt: row.alt,
+    sortOrder: row.sort_order,
+    storagePath: extractStoragePathFromUrl(row.url),
+  };
+}
+
 export function mapDbProduct(
   row: DbProduct,
-  categories: AdminCategory[]
+  categories: AdminCategory[],
+  imageRows: DbProductImage[] = []
 ): AdminProduct {
   const sub = categories.find((c) => c.id === row.subcategory_id);
   const groupSlug = sub?.groupSlug ?? null;
@@ -96,6 +111,7 @@ export function mapDbProduct(
     status: (row.status as ProductStatus) || "draft",
     stockStatus: row.stock_status,
     sortOrder: row.sort_order ?? 0,
+    images: imageRows.map(mapDbProductImage),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

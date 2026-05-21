@@ -37,6 +37,23 @@ export type AdminCollection = {
   legacyId?: string;
 };
 
+export type AdminProductImage = {
+  id: string;
+  productId: string;
+  url: string;
+  alt: string | null;
+  sortOrder: number;
+  storagePath?: string | null;
+};
+
+export type ProductGalleryImageInput = {
+  id?: string;
+  url: string;
+  alt?: string | null;
+  sortOrder: number;
+  storagePath?: string | null;
+};
+
 export type AdminProduct = {
   id: string;
   slug: string;
@@ -61,15 +78,19 @@ export type AdminProduct = {
   status: ProductStatus;
   stockStatus: StockStatus | string;
   sortOrder: number;
+  images?: AdminProductImage[];
   createdAt: string;
   updatedAt?: string;
 };
 
 export type AdminProductInput = Omit<
   AdminProduct,
-  "createdAt" | "updatedAt" | "id"
+  "createdAt" | "updatedAt" | "id" | "images"
 > & {
   id?: string;
+  galleryImages?: ProductGalleryImageInput[];
+  removedImageIds?: string[];
+  removedStoragePaths?: string[];
 };
 
 export type AdminActionResult<T = void> = {

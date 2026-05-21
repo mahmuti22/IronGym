@@ -6,9 +6,12 @@ import type {
   AdminProduct,
   AdminProductInput,
 } from "@/lib/admin/types";
+import { deleteProductImage } from "./media";
 import { mapDbProduct, slugify } from "./mappers";
 import { getMockProducts } from "./mock-data";
+import type { ProductGalleryImageInput } from "@/lib/admin/types";
 import type { Database } from "@/types/database";
+import type { DbProductImage } from "@/types/database";
 
 type ProductUpdate = Database["public"]["Tables"]["products"]["Update"];
 type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
@@ -49,6 +52,82 @@ function resolveCategoryUuid(
     (c) => c.groupSlug === filterGroup && !c.parentId
   );
   return top?.id ?? null;
+}
+
+export async function fetchProductImages(
+  productId: string
+): Promise<DbProductImage[]> {
+  if (!isSupabaseConfigured()) return [];
+
+  const supabase = createBrowserSupabaseClient();
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("product_images")
+    .select("*")
+    .eq("product_id", productId)
+    .order("sort_order", { ascending: true });
+
+  if (error) return [];
+  return data ?? [];
+}
+
+export async function syncProductImages(
+  productId: string,
+  mainImageUrl: string | null,
+  gallery: ProductGalleryImageInput[],
+  options?: {
+    removedImageIds?: string[];
+    removedStoragePaths?: string[];
+  }
+): Promise<AdminActionResult> {
+  if (!isSupabaseConfigured()) {
+    return { ok: false, error: "Supabase is not configured" };
+  }
+
+  const supabase = createBrowserSupabaseClient();
+  if (!supabase) return { ok: false, error: "Supabase client unavailable" };
+
+  const removedIds = options?.removedImageIds ?? [];
+  const removedPaths = options?.removedStoragePaths ?? [];
+
+  if (removedIds.length > 0) {
+    const { error } = await supabase
+      .from("product_images")
+      .delete()
+      .in("id", removedIds);
+    if (error) return { ok: false, error: error.message };
+  }
+
+  for (const path of removedPaths) {
+    await deleteProductImage(path);
+  }
+
+  const main = mainImageUrl?.trim() || null;
+  const extras = gallery.filter((img) => img.url.trim() && img.url !== main);
+
+  const { error: deleteExtrasError } = await supabase
+    .from("product_images")
+    .delete()
+    .eq("product_id", productId);
+
+  if (deleteExtrasError) {
+    return { ok: false, error: deleteExtrasError.message };
+  }
+
+  if (extras.length > 0) {
+    const { error: insertError } = await supabase.from("product_images").insert(
+      extras.map((img, index) => ({
+        product_id: productId,
+        url: img.url,
+        alt: img.alt ?? null,
+        sort_order: img.sortOrder ?? index,
+      }))
+    );
+    if (insertError) return { ok: false, error: insertError.message };
+  }
+
+  return { ok: true };
 }
 
 export async function fetchProducts(
@@ -120,8 +199,11 @@ export async function getProductById(
     return { data: null, source: "supabase" };
   }
 
+  const images = await fetchProductImages(data.id);
+  const product = mapDbProduct(data, categories, images);
+
   return {
-    data: mapDbProduct(data, categories),
+    data: product,
     source: "supabase",
   };
 }
@@ -184,16 +266,22 @@ export async function createProduct(
 
   if (error) return { ok: false, error: error.message };
 
-  if (input.image) {
-    await supabase.from("product_images").insert({
-      product_id: data.id,
-      url: input.image,
-      alt: input.name,
-      sort_order: 0,
-    });
+  const mainUrl = input.image?.trim() || null;
+  if (input.galleryImages?.length || input.removedImageIds?.length) {
+    const sync = await syncProductImages(
+      data.id,
+      mainUrl,
+      input.galleryImages ?? [],
+      {
+        removedImageIds: input.removedImageIds,
+        removedStoragePaths: input.removedStoragePaths,
+      }
+    );
+    if (!sync.ok) return { ok: false, error: sync.error };
   }
 
-  return { ok: true, data: mapDbProduct(data, categories) };
+  const images = await fetchProductImages(data.id);
+  return { ok: true, data: mapDbProduct(data, categories, images) };
 }
 
 export async function updateProduct(
@@ -254,7 +342,31 @@ export async function updateProduct(
     .single();
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true, data: mapDbProduct(data, categories) };
+
+  const mainUrl =
+    input.image !== undefined ? input.image?.trim() || null : undefined;
+
+  if (
+    input.galleryImages !== undefined ||
+    input.removedImageIds?.length ||
+    input.removedStoragePaths?.length
+  ) {
+    const currentMain =
+      mainUrl !== undefined ? mainUrl : data.main_image_url ?? null;
+    const sync = await syncProductImages(
+      id,
+      currentMain,
+      input.galleryImages ?? [],
+      {
+        removedImageIds: input.removedImageIds,
+        removedStoragePaths: input.removedStoragePaths,
+      }
+    );
+    if (!sync.ok) return { ok: false, error: sync.error };
+  }
+
+  const images = await fetchProductImages(id);
+  return { ok: true, data: mapDbProduct(data, categories, images) };
 }
 
 export async function deleteProduct(id: string): Promise<AdminActionResult> {

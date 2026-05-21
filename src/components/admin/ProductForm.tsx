@@ -1,17 +1,26 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAdmin } from "./AdminProvider";
 import { getProductById } from "@/lib/admin/products";
-import type { AdminProduct, ProductStatus, StockStatus } from "@/lib/admin/types";
+import { uploadProductImage } from "@/lib/admin/media";
+import type {
+  AdminProduct,
+  ProductGalleryImageInput,
+  ProductStatus,
+  StockStatus,
+} from "@/lib/admin/types";
+import {
+  ProductImageUploader,
+  buildImagesFromProduct,
+  type ProductImageItem,
+} from "./ProductImageUploader";
 import {
   AdminCard,
   adminBtnPrimaryClass,
   adminBtnSecondaryClass,
-  adminCaptionClass,
   adminInputClass,
   adminLabelClass,
   adminMutedTextClass,
@@ -23,12 +32,13 @@ import {
   DEFAULT_SIZES,
   DEFAULT_COLORS,
   shopFilterLabels,
-  productImageFocusClasses,
   getProductPath,
   type ProductTag,
   type ShopFilterGroup,
   type ShopGender,
 } from "@/data/shop";
+
+const PLACEHOLDER_IMAGE = CATALOG_STUDIO_MODEL_01;
 
 const ALL_TAGS: ProductTag[] = ["New", "Best Seller", "Sale"];
 
@@ -57,7 +67,6 @@ type FormState = {
   status: ProductStatus;
   stockStatus: StockStatus;
   sortOrder: string;
-  mainImageUrl: string;
   imageFocusIndex: number;
 };
 
@@ -80,7 +89,6 @@ const emptyForm = (): FormState => ({
   status: "draft",
   stockStatus: "in_stock",
   sortOrder: "0",
-  mainImageUrl: "",
   imageFocusIndex: 0,
 });
 
@@ -107,9 +115,16 @@ function adminProductToFormValues(product: AdminProduct): FormState {
     status: product.status,
     stockStatus: (product.stockStatus as StockStatus) || "in_stock",
     sortOrder: String(product.sortOrder ?? 0),
-    mainImageUrl: product.image,
     imageFocusIndex: product.imageFocusIndex,
   };
+}
+
+function isRealImageUrl(url: string): boolean {
+  return (
+    Boolean(url.trim()) &&
+    url !== PLACEHOLDER_IMAGE &&
+    !url.startsWith("blob:")
+  );
 }
 
 type SubcategoryOption = { id: string; title: string };
@@ -134,7 +149,11 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
   } = useAdmin();
 
   const [form, setForm] = useState<FormState>(emptyForm);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<ProductImageItem[]>(() =>
+    buildImagesFromProduct("")
+  );
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
+  const [removedStoragePaths, setRemovedStoragePaths] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [formReady, setFormReady] = useState(mode === "create");
@@ -149,9 +168,6 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
   }, [subcategories, form.filterGroup]);
 
   const hasSubcategories = subsForGroup.length > 0;
-
-  const previewSrc =
-    previewImage ?? (form.mainImageUrl.trim() || CATALOG_STUDIO_MODEL_01);
 
   const shopPublicId =
     dataSource === "supabase" ? form.slug.trim() : productId ?? form.slug;
@@ -177,7 +193,11 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
       }
 
       setForm(adminProductToFormValues(product));
-      setPreviewImage(null);
+      setGalleryImages(
+        buildImagesFromProduct(product.image, product.images ?? [])
+      );
+      setRemovedImageIds([]);
+      setRemovedStoragePaths([]);
       setNotFound(false);
       setFormReady(true);
     }
@@ -229,15 +249,73 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
     }));
   }
 
-  function handleImagePlaceholder(file: File | null) {
-    if (!file) {
-      setPreviewImage(null);
-      return;
+  async function resolveGalleryForSave(
+    slug: string,
+    productName: string
+  ): Promise<{
+    mainUrl: string;
+    gallery: ProductGalleryImageInput[];
+    removedIds: string[];
+    removedPaths: string[];
+  }> {
+    const resolved: ProductImageItem[] = [];
+
+    for (const img of galleryImages) {
+      if (img.file && dataSource === "supabase") {
+        const upload = await uploadProductImage(img.file, slug);
+        if (!upload.ok || !upload.url) {
+          throw new Error(upload.error ?? "Upload immagine fallito");
+        }
+        if (img.previewUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(img.previewUrl);
+        }
+        resolved.push({
+          ...img,
+          previewUrl: upload.url,
+          publicUrl: upload.url,
+          storagePath: upload.path ?? null,
+          file: undefined,
+        });
+      } else {
+        resolved.push(img);
+      }
     }
-    setPreviewImage(URL.createObjectURL(file));
+
+    const mainItem = resolved.find((i) => i.isMain) ?? resolved[0];
+    const mainCandidate =
+      mainItem?.publicUrl?.trim() || mainItem?.previewUrl?.trim() || "";
+    const mainUrl = isRealImageUrl(mainCandidate)
+      ? mainCandidate
+      : PLACEHOLDER_IMAGE;
+
+    const gallery: ProductGalleryImageInput[] = resolved
+      .filter((img) => {
+        const url = img.publicUrl?.trim() || img.previewUrl?.trim() || "";
+        return isRealImageUrl(url) && url !== mainUrl;
+      })
+      .map((img, index) => ({
+        id: img.dbId,
+        url: (img.publicUrl ?? img.previewUrl).trim(),
+        alt: productName,
+        sortOrder: index,
+        storagePath: img.storagePath ?? null,
+      }));
+
+    return {
+      mainUrl,
+      gallery,
+      removedIds: removedImageIds,
+      removedPaths: removedStoragePaths,
+    };
   }
 
-  function buildPayload(slug: string, image: string) {
+  function buildPayload(
+    slug: string,
+    image: string,
+    gallery: ProductGalleryImageInput[],
+    removedIds: string[],
+    removedPaths: string[]
+  ) {
     const sale =
       form.salePrice.trim() === "" ? null : Number(form.salePrice) || null;
 
@@ -270,6 +348,9 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
       status: form.status,
       stockStatus: form.stockStatus,
       sortOrder: Number(form.sortOrder) || 0,
+      galleryImages: gallery,
+      removedImageIds: removedIds,
+      removedStoragePaths: removedPaths,
     };
   }
 
@@ -287,16 +368,38 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/^-|-$/g, "");
 
-    const image =
-      previewImage ??
-      (form.mainImageUrl.trim() || CATALOG_STUDIO_MODEL_01);
-
-    const payload = buildPayload(slug, image);
-
     let ok = false;
 
+    try {
+      const { mainUrl, gallery, removedIds, removedPaths } =
+        await resolveGalleryForSave(slug, form.name.trim());
+
+      const payload = buildPayload(
+        slug,
+        mainUrl,
+        gallery,
+        removedIds,
+        removedPaths
+      );
+
+      if (isEdit) {
+        ok = await updateProduct(productId!, payload);
+      } else {
+        const legacyId = slug.startsWith("ig-") ? slug : `ig-${slug}`;
+        ok = await addProduct({
+          ...payload,
+          id: dataSource === "mock" ? legacyId : undefined,
+        });
+      }
+    } catch (err) {
+      setSaving(false);
+      setFeedback(
+        err instanceof Error ? err.message : "Errore durante il caricamento immagini"
+      );
+      return;
+    }
+
     if (isEdit) {
-      ok = await updateProduct(productId!, payload);
       if (ok) {
         setFeedback(
           dataSource === "supabase"
@@ -306,21 +409,14 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
       } else {
         setFeedback("Errore durante l'aggiornamento del prodotto");
       }
+    } else if (ok) {
+      setFeedback(
+        dataSource === "supabase"
+          ? "Prodotto creato nel database"
+          : "Prodotto creato (mock locale)"
+      );
     } else {
-      const legacyId = slug.startsWith("ig-") ? slug : `ig-${slug}`;
-      ok = await addProduct({
-        ...payload,
-        id: dataSource === "mock" ? legacyId : undefined,
-      });
-      if (ok) {
-        setFeedback(
-          dataSource === "supabase"
-            ? "Prodotto creato nel database"
-            : "Prodotto creato (mock locale)"
-        );
-      } else {
-        setFeedback("Errore durante il salvataggio del prodotto");
-      }
+      setFeedback("Errore durante il salvataggio del prodotto");
     }
 
     setSaving(false);
@@ -624,44 +720,36 @@ export function ProductForm({ mode = "create", productId }: ProductFormProps) {
 
         <div className="space-y-6">
           <AdminCard className="p-6">
-            <h2 className={`mb-4 ${adminSectionTitleClass}`}>Immagine</h2>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-white/10 bg-black/40">
-              <Image
-                src={previewSrc}
-                alt="Anteprima"
-                fill
-                className={`object-cover ${productImageFocusClasses[form.imageFocusIndex]}`}
-                unoptimized={previewSrc.startsWith("blob:")}
-              />
-            </div>
-            <div className="mt-4">
-              <label className={adminLabelClass}>URL immagine principale</label>
-              <input
-                value={form.mainImageUrl}
-                onChange={(e) => {
-                  update("mainImageUrl", e.target.value);
-                  setPreviewImage(null);
-                }}
-                className={adminInputClass}
-                placeholder="https://…"
-              />
-            </div>
-            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/[0.06] px-4 py-8 text-center transition hover:border-white/30 hover:bg-white/[0.08]">
-              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-300">
-                Carica immagine (anteprima locale)
-              </span>
-              <span className={`mt-1 ${adminCaptionClass}`}>
-                PNG, JPG — anteprima; salva anche l&apos;URL sopra
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="sr-only"
-                onChange={(e) =>
-                  handleImagePlaceholder(e.target.files?.[0] ?? null)
+            <h2 className={`mb-4 ${adminSectionTitleClass}`}>Immagini prodotto</h2>
+            <ProductImageUploader
+              productSlug={
+                form.slug.trim() ||
+                form.name
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, "-")
+                  .replace(/^-|-$/g, "") ||
+                "product"
+              }
+              productName={form.name}
+              images={galleryImages}
+              onChange={setGalleryImages}
+              onRemove={(item) => {
+                if (item.dbId) {
+                  setRemovedImageIds((prev) =>
+                    prev.includes(item.dbId!) ? prev : [...prev, item.dbId!]
+                  );
                 }
-              />
-            </label>
+                if (item.storagePath) {
+                  setRemovedStoragePaths((prev) =>
+                    prev.includes(item.storagePath!)
+                      ? prev
+                      : [...prev, item.storagePath!]
+                  );
+                }
+              }}
+              disabled={saving}
+              imageFocusIndex={form.imageFocusIndex}
+            />
             <div className="mt-4">
               <label className={adminLabelClass}>Focus immagine (0–3)</label>
               <input
