@@ -87,6 +87,45 @@ export async function fetchProducts(
   };
 }
 
+export async function getProductById(
+  id: string,
+  categories: AdminCategory[]
+): Promise<{
+  data: AdminProduct | null;
+  source: "supabase" | "mock";
+  error?: string;
+}> {
+  if (!isSupabaseConfigured()) {
+    const product = getMockProducts().find((p) => p.id === id) ?? null;
+    return { data: product, source: "mock" };
+  }
+
+  const supabase = createBrowserSupabaseClient();
+  if (!supabase) {
+    const product = getMockProducts().find((p) => p.id === id) ?? null;
+    return { data: product, source: "mock" };
+  }
+
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    return { data: null, source: "supabase", error: error.message };
+  }
+
+  if (!data) {
+    return { data: null, source: "supabase" };
+  }
+
+  return {
+    data: mapDbProduct(data, categories),
+    source: "supabase",
+  };
+}
+
 export async function createProduct(
   input: AdminProductInput,
   categories: AdminCategory[]
@@ -134,7 +173,7 @@ export async function createProduct(
     status: input.status,
     stock_status: input.stockStatus ?? "in_stock",
     main_image_url: input.image || null,
-    sort_order: 0,
+    sort_order: input.sortOrder ?? 0,
   };
 
   const { data, error } = await supabase
@@ -189,6 +228,7 @@ export async function updateProduct(
   if (input.status != null) payload.status = input.status;
   if (input.stockStatus != null) payload.stock_status = input.stockStatus;
   if (input.image != null) payload.main_image_url = input.image;
+  if (input.sortOrder != null) payload.sort_order = input.sortOrder;
 
   if (input.subcategoryId !== undefined || input.filterGroup != null) {
     const subUuid = resolveSubcategoryUuid(input.subcategoryId, categories);
@@ -199,6 +239,11 @@ export async function updateProduct(
     );
     payload.subcategory_id = subUuid;
     payload.category_id = catUuid;
+  } else if (input.subcategoryId === null) {
+    payload.subcategory_id = null;
+    if (input.filterGroup != null) {
+      payload.category_id = resolveCategoryUuid(input.filterGroup, null, categories);
+    }
   }
 
   const { data, error } = await supabase

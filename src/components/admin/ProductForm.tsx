@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAdmin } from "./AdminProvider";
-import type { ProductStatus } from "@/lib/admin/types";
+import { getProductById } from "@/lib/admin/products";
+import type { AdminProduct, ProductStatus, StockStatus } from "@/lib/admin/types";
 import {
   AdminCard,
   adminBtnPrimaryClass,
@@ -13,6 +14,7 @@ import {
   adminCaptionClass,
   adminInputClass,
   adminLabelClass,
+  adminMutedTextClass,
   adminSectionTitleClass,
 } from "./admin-ui";
 import { CATALOG_STUDIO_MODEL_01 } from "@/data/catalog";
@@ -22,6 +24,7 @@ import {
   DEFAULT_COLORS,
   shopFilterLabels,
   productImageFocusClasses,
+  getProductPath,
   type ProductTag,
   type ShopFilterGroup,
   type ShopGender,
@@ -29,34 +32,115 @@ import {
 
 const ALL_TAGS: ProductTag[] = ["New", "Best Seller", "Sale"];
 
-const emptyForm = {
+const STOCK_OPTIONS: { value: StockStatus; label: string }[] = [
+  { value: "in_stock", label: "Disponibile" },
+  { value: "low_stock", label: "Scorte basse" },
+  { value: "out_of_stock", label: "Esaurito" },
+];
+
+type FormState = {
+  slug: string;
+  name: string;
+  description: string;
+  longDescription: string;
+  price: string;
+  salePrice: string;
+  filterGroup: ShopFilterGroup;
+  subcategoryId: string;
+  gender: ShopGender;
+  material: string;
+  fit: string;
+  careInstructions: string;
+  sizesText: string;
+  colorsText: string;
+  tags: ProductTag[];
+  status: ProductStatus;
+  stockStatus: StockStatus;
+  sortOrder: string;
+  mainImageUrl: string;
+  imageFocusIndex: number;
+};
+
+const emptyForm = (): FormState => ({
   slug: "",
   name: "",
   description: "",
   longDescription: "",
   price: "",
-  filterGroup: "uomo" as ShopFilterGroup,
+  salePrice: "",
+  filterGroup: "uomo",
   subcategoryId: "",
-  gender: "uomo" as ShopGender,
+  gender: "uomo",
   material: "",
   fit: "Regular fit",
   careInstructions: "Lavaggio a 30°C. Non candeggiare.",
   sizesText: DEFAULT_SIZES.join(", "),
   colorsText: DEFAULT_COLORS.join(", "),
-  tags: [] as ProductTag[],
-  status: "draft" as ProductStatus,
+  tags: [],
+  status: "draft",
+  stockStatus: "in_stock",
+  sortOrder: "0",
+  mainImageUrl: "",
   imageFocusIndex: 0,
-};
+});
+
+function adminProductToFormValues(product: AdminProduct): FormState {
+  return {
+    slug: product.slug,
+    name: product.name,
+    description: product.description,
+    longDescription: product.longDescription,
+    price: String(product.price),
+    salePrice:
+      product.salePrice != null && product.salePrice > 0
+        ? String(product.salePrice)
+        : "",
+    filterGroup: product.filterGroup,
+    subcategoryId: product.subcategoryId ?? "",
+    gender: product.gender,
+    material: product.material,
+    fit: product.fit,
+    careInstructions: product.careInstructions,
+    sizesText: product.sizes.join(", "),
+    colorsText: product.colors.join(", "),
+    tags: product.tags,
+    status: product.status,
+    stockStatus: (product.stockStatus as StockStatus) || "in_stock",
+    sortOrder: String(product.sortOrder ?? 0),
+    mainImageUrl: product.image,
+    imageFocusIndex: product.imageFocusIndex,
+  };
+}
 
 type SubcategoryOption = { id: string; title: string };
 
-export function ProductForm() {
+export type ProductFormMode = "create" | "edit";
+
+type ProductFormProps = {
+  mode?: ProductFormMode;
+  productId?: string;
+};
+
+export function ProductForm({ mode = "create", productId }: ProductFormProps) {
   const router = useRouter();
-  const { addProduct, subcategories, dataSource } = useAdmin();
-  const [form, setForm] = useState(emptyForm);
+  const {
+    addProduct,
+    updateProduct,
+    subcategories,
+    categories,
+    products,
+    dataSource,
+    loading: adminLoading,
+  } = useAdmin();
+
+  const [form, setForm] = useState<FormState>(emptyForm);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [formReady, setFormReady] = useState(mode === "create");
+  const [notFound, setNotFound] = useState(false);
+
+  const isEdit = mode === "edit" && Boolean(productId);
 
   const subsForGroup = useMemo((): SubcategoryOption[] => {
     return subcategories
@@ -66,20 +150,72 @@ export function ProductForm() {
 
   const hasSubcategories = subsForGroup.length > 0;
 
+  const previewSrc =
+    previewImage ?? (form.mainImageUrl.trim() || CATALOG_STUDIO_MODEL_01);
+
+  const shopPublicId =
+    dataSource === "supabase" ? form.slug.trim() : productId ?? form.slug;
+
   useEffect(() => {
+    if (!isEdit || !productId) return;
+    if (adminLoading) return;
+
+    let cancelled = false;
+
+    async function loadProduct() {
+      const fromList = products.find((p) => p.id === productId);
+      const product =
+        fromList ??
+        (await getProductById(productId!, categories)).data;
+
+      if (cancelled) return;
+
+      if (!product) {
+        setNotFound(true);
+        setFormReady(false);
+        return;
+      }
+
+      setForm(adminProductToFormValues(product));
+      setPreviewImage(null);
+      setNotFound(false);
+      setFormReady(true);
+    }
+
+    void loadProduct();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit, productId, adminLoading, products, categories]);
+
+  useEffect(() => {
+    if (!formReady) return;
+
     if (!hasSubcategories) {
       if (form.subcategoryId !== "") {
         setForm((f) => ({ ...f, subcategoryId: "" }));
       }
       return;
     }
+
     const stillValid = subsForGroup.some((s) => s.id === form.subcategoryId);
+    if (!stillValid && isEdit) {
+      return;
+    }
     if (!stillValid) {
       setForm((f) => ({ ...f, subcategoryId: subsForGroup[0].id }));
     }
-  }, [form.filterGroup, form.subcategoryId, subsForGroup, hasSubcategories]);
+  }, [
+    form.filterGroup,
+    form.subcategoryId,
+    subsForGroup,
+    hasSubcategories,
+    formReady,
+    isEdit,
+  ]);
 
-  function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
+  function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
     setFeedback(null);
   }
@@ -98,26 +234,14 @@ export function ProductForm() {
       setPreviewImage(null);
       return;
     }
-    const url = URL.createObjectURL(file);
-    setPreviewImage(url);
+    setPreviewImage(URL.createObjectURL(file));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setSaving(true);
-    setFeedback(null);
+  function buildPayload(slug: string, image: string) {
+    const sale =
+      form.salePrice.trim() === "" ? null : Number(form.salePrice) || null;
 
-    const slug =
-      form.slug.trim() ||
-      form.name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
-
-    const legacyId = slug.startsWith("ig-") ? slug : `ig-${slug}`;
-
-    const ok = await addProduct({
-      id: dataSource === "mock" ? legacyId : undefined,
+    return {
       slug,
       name: form.name.trim(),
       description: form.description.trim(),
@@ -128,8 +252,8 @@ export function ProductForm() {
       filterGroup: form.filterGroup,
       gender: form.gender,
       price: Number(form.price) || 0,
-      salePrice: null,
-      image: previewImage ?? CATALOG_STUDIO_MODEL_01,
+      salePrice: sale,
+      image,
       imageFocusIndex: form.imageFocusIndex,
       tags: form.tags,
       sizes: form.sizesText
@@ -144,21 +268,89 @@ export function ProductForm() {
       fit: form.fit.trim(),
       careInstructions: form.careInstructions.trim(),
       status: form.status,
-      stockStatus: "in_stock",
-    });
+      stockStatus: form.stockStatus,
+      sortOrder: Number(form.sortOrder) || 0,
+    };
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (isEdit && !productId) return;
+
+    setSaving(true);
+    setFeedback(null);
+
+    const slug =
+      form.slug.trim() ||
+      form.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+
+    const image =
+      previewImage ??
+      (form.mainImageUrl.trim() || CATALOG_STUDIO_MODEL_01);
+
+    const payload = buildPayload(slug, image);
+
+    let ok = false;
+
+    if (isEdit) {
+      ok = await updateProduct(productId!, payload);
+      if (ok) {
+        setFeedback(
+          dataSource === "supabase"
+            ? "Prodotto aggiornato nel database"
+            : "Prodotto aggiornato (mock locale)"
+        );
+      } else {
+        setFeedback("Errore durante l'aggiornamento del prodotto");
+      }
+    } else {
+      const legacyId = slug.startsWith("ig-") ? slug : `ig-${slug}`;
+      ok = await addProduct({
+        ...payload,
+        id: dataSource === "mock" ? legacyId : undefined,
+      });
+      if (ok) {
+        setFeedback(
+          dataSource === "supabase"
+            ? "Prodotto creato nel database"
+            : "Prodotto creato (mock locale)"
+        );
+      } else {
+        setFeedback("Errore durante il salvataggio del prodotto");
+      }
+    }
 
     setSaving(false);
 
     if (ok) {
-      setFeedback(
-        dataSource === "supabase"
-          ? "Saved to database"
-          : "Using local mock data because Supabase is not configured"
-      );
       setTimeout(() => router.push("/admin/products"), 800);
-    } else {
-      setFeedback("Error while saving product");
     }
+  }
+
+  if (isEdit && (adminLoading || !formReady) && !notFound) {
+    return (
+      <p className={`py-12 text-center ${adminMutedTextClass}`}>
+        Caricamento prodotto…
+      </p>
+    );
+  }
+
+  if (isEdit && notFound) {
+    return (
+      <div className="mx-auto max-w-lg space-y-4 text-center">
+        <p className="text-lg font-semibold text-white">Prodotto non trovato</p>
+        <p className={adminMutedTextClass}>
+          L&apos;ID <code className="text-zinc-400">{productId}</code> non esiste
+          o non è accessibile.
+        </p>
+        <Link href="/admin/products" className={adminBtnSecondaryClass}>
+          Torna ai prodotti
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -166,15 +358,13 @@ export function ProductForm() {
       {feedback && (
         <div
           className={`rounded-xl border px-4 py-3 text-sm ${
-            feedback.includes("Error")
+            feedback.includes("Errore")
               ? "border-red-500/30 bg-red-500/10 text-red-300"
-              : feedback.includes("database")
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
-                : "border-amber-500/30 bg-amber-500/10 text-amber-200"
+              : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
           }`}
         >
           {feedback}
-          {!feedback.includes("Error") && " — reindirizzamento…"}
+          {!feedback.includes("Errore") && " — reindirizzamento…"}
         </div>
       )}
 
@@ -214,6 +404,18 @@ export function ProductForm() {
                   value={form.price}
                   onChange={(e) => update("price", e.target.value)}
                   className={adminInputClass}
+                />
+              </div>
+              <div>
+                <label className={adminLabelClass}>Prezzo scontato (CHF)</label>
+                <input
+                  type="number"
+                  min={0}
+                  step={1}
+                  value={form.salePrice}
+                  onChange={(e) => update("salePrice", e.target.value)}
+                  className={adminInputClass}
+                  placeholder="Opzionale"
                 />
               </div>
               <div className="sm:col-span-2">
@@ -275,9 +477,7 @@ export function ProductForm() {
                   disabled={!hasSubcategories}
                 >
                   {!hasSubcategories ? (
-                    <option value="">
-                      Nessuna sottocategoria disponibile
-                    </option>
+                    <option value="">Nessuna sottocategoria disponibile</option>
                   ) : (
                     <>
                       <option value="">Sottocategoria opzionale</option>
@@ -315,7 +515,33 @@ export function ProductForm() {
                 >
                   <option value="draft">Bozza</option>
                   <option value="published">Pubblicato</option>
+                  <option value="archived">Archiviato</option>
                 </select>
+              </div>
+              <div>
+                <label className={adminLabelClass}>Disponibilità</label>
+                <select
+                  value={form.stockStatus}
+                  onChange={(e) =>
+                    update("stockStatus", e.target.value as StockStatus)
+                  }
+                  className={adminInputClass}
+                >
+                  {STOCK_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className={adminLabelClass}>Ordine</label>
+                <input
+                  type="number"
+                  value={form.sortOrder}
+                  onChange={(e) => update("sortOrder", e.target.value)}
+                  className={adminInputClass}
+                />
               </div>
             </div>
           </AdminCard>
@@ -342,7 +568,9 @@ export function ProductForm() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className={adminLabelClass}>Taglie (separate da virgola)</label>
+                <label className={adminLabelClass}>
+                  Taglie (separate da virgola)
+                </label>
                 <input
                   value={form.sizesText}
                   onChange={(e) => update("sizesText", e.target.value)}
@@ -350,7 +578,9 @@ export function ProductForm() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className={adminLabelClass}>Colori (separate da virgola)</label>
+                <label className={adminLabelClass}>
+                  Colori (separate da virgola)
+                </label>
                 <input
                   value={form.colorsText}
                   onChange={(e) => update("colorsText", e.target.value)}
@@ -372,9 +602,7 @@ export function ProductForm() {
           </AdminCard>
 
           <AdminCard className="p-6">
-            <h2 className={`mb-4 ${adminSectionTitleClass}`}>
-              Tag
-            </h2>
+            <h2 className={`mb-4 ${adminSectionTitleClass}`}>Tag</h2>
             <div className="flex flex-wrap gap-2">
               {ALL_TAGS.map((tag) => (
                 <button
@@ -396,15 +624,26 @@ export function ProductForm() {
 
         <div className="space-y-6">
           <AdminCard className="p-6">
-            <h2 className={`mb-4 ${adminSectionTitleClass}`}>
-              Immagine
-            </h2>
+            <h2 className={`mb-4 ${adminSectionTitleClass}`}>Immagine</h2>
             <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-white/10 bg-black/40">
               <Image
-                src={previewImage ?? CATALOG_STUDIO_MODEL_01}
+                src={previewSrc}
                 alt="Anteprima"
                 fill
                 className={`object-cover ${productImageFocusClasses[form.imageFocusIndex]}`}
+                unoptimized={previewSrc.startsWith("blob:")}
+              />
+            </div>
+            <div className="mt-4">
+              <label className={adminLabelClass}>URL immagine principale</label>
+              <input
+                value={form.mainImageUrl}
+                onChange={(e) => {
+                  update("mainImageUrl", e.target.value);
+                  setPreviewImage(null);
+                }}
+                className={adminInputClass}
+                placeholder="https://…"
               />
             </div>
             <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/[0.06] px-4 py-8 text-center transition hover:border-white/30 hover:bg-white/[0.08]">
@@ -412,7 +651,7 @@ export function ProductForm() {
                 Carica immagine (anteprima locale)
               </span>
               <span className={`mt-1 ${adminCaptionClass}`}>
-                PNG, JPG — non salvata su server
+                PNG, JPG — anteprima; salva anche l&apos;URL sopra
               </span>
               <input
                 type="file"
@@ -444,8 +683,21 @@ export function ProductForm() {
               disabled={saving}
               className={`${adminBtnPrimaryClass} min-h-12 w-full disabled:opacity-60`}
             >
-              {saving ? "Salvataggio…" : "Salva prodotto"}
+              {saving
+                ? "Salvataggio…"
+                : isEdit
+                  ? "Salva modifiche"
+                  : "Salva prodotto"}
             </button>
+            {isEdit && form.status === "published" && shopPublicId && (
+              <Link
+                href={getProductPath(shopPublicId)}
+                target="_blank"
+                className={`${adminBtnSecondaryClass} min-h-11 w-full`}
+              >
+                Vedi nello shop
+              </Link>
+            )}
             <Link
               href="/admin/products"
               className={`${adminBtnSecondaryClass} min-h-11 w-full`}

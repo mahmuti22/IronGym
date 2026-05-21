@@ -203,17 +203,29 @@ export function ProductsTable() {
                         >
                           <AdminBadge
                             variant={
-                              p.status === "published" ? "success" : "warning"
+                              p.status === "published"
+                                ? "success"
+                                : p.status === "archived"
+                                  ? "muted"
+                                  : "warning"
                             }
                           >
                             {p.status === "published"
                               ? "Pubblicato"
-                              : "Bozza"}
+                              : p.status === "archived"
+                                ? "Archiviato"
+                                : "Bozza"}
                           </AdminBadge>
                         </button>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
+                          <Link
+                            href={`/admin/products/${p.id}/edit`}
+                            className={adminBtnGhostClass}
+                          >
+                            Modifica
+                          </Link>
                           <Link
                             href={getProductPath(publicId)}
                             target="_blank"

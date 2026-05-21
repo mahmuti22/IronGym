@@ -7,7 +7,7 @@ export default function AdminNewProductPage() {
       title="Nuovo prodotto"
       description="Compila il form e salva nel database Supabase."
     >
-      <ProductForm />
+      <ProductForm mode="create" />
     </AdminShell>
   );
 }

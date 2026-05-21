@@ -93,8 +93,9 @@ export function mapDbProduct(
     material: row.material ?? "",
     fit: row.fit ?? "",
     careInstructions: row.care_instructions ?? "",
-    status: row.status as ProductStatus,
+    status: (row.status as ProductStatus) || "draft",
     stockStatus: row.stock_status,
+    sortOrder: row.sort_order ?? 0,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

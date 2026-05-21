@@ -6,7 +6,9 @@ import type {
   ShopSubcategory,
 } from "@/data/shop";
 
-export type ProductStatus = "published" | "draft";
+export type ProductStatus = "published" | "draft" | "archived";
+
+export type StockStatus = "in_stock" | "out_of_stock" | "low_stock";
 export type DataSource = "supabase" | "mock";
 
 export type AdminCategory = {
@@ -57,7 +59,8 @@ export type AdminProduct = {
   fit: string;
   careInstructions: string;
   status: ProductStatus;
-  stockStatus: string;
+  stockStatus: StockStatus | string;
+  sortOrder: number;
   createdAt: string;
   updatedAt?: string;
 };

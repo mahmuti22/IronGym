@@ -38,6 +38,7 @@ export function getMockProducts(): AdminProduct[] {
       careInstructions: full.careInstructions ?? "",
       status: "published",
       stockStatus: "in_stock",
+      sortOrder: 0,
       createdAt: "2026-01-15T10:00:00.000Z",
     };
   });

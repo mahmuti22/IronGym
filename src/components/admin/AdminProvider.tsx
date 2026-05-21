@@ -82,6 +82,7 @@ function buildMockProduct(input: AdminProductInput): AdminProduct {
     slug: input.slug ?? slug,
     salePrice: input.salePrice ?? null,
     stockStatus: input.stockStatus ?? "in_stock",
+    sortOrder: input.sortOrder ?? 0,
     categoryId: input.categoryId ?? null,
     createdAt: new Date().toISOString(),
   };
