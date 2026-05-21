@@ -40,6 +40,13 @@ export type CreateOrderRequest = {
   items: CheckoutOrderItemInput[];
 };
 
+export type CreateOrderOptions = {
+  paymentMethod?: string;
+  paymentProvider?: string;
+  /** Send order confirmation emails (default true). */
+  sendEmails?: boolean;
+};
+
 export type CreateOrderResponse =
   | {
       ok: true;
@@ -87,6 +94,10 @@ export type AdminOrder = {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: string | null;
+  paymentProvider: string | null;
+  stripeSessionId: string | null;
+  stripePaymentIntentId: string | null;
+  paidAt: string | null;
   createdAt: string;
   updatedAt: string;
   shippedAt: string | null;

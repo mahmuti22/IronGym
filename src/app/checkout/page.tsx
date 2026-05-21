@@ -5,6 +5,7 @@ import { CheckoutPageClient } from "@/components/checkout/CheckoutPageClient";
 import { profileToCheckoutForm } from "@/lib/customer/profile";
 import { fetchCustomerProfile } from "@/lib/customer/auth-check";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isStripeConfigured } from "@/lib/payments/stripe-config";
 
 export const metadata: Metadata = {
   title: "Checkout | IronGym",
@@ -28,6 +29,8 @@ export default async function CheckoutPage() {
     }
   }
 
+  const stripeEnabled = isStripeConfigured();
+
   return (
     <>
       <Header />
@@ -37,10 +40,15 @@ export default async function CheckoutPage() {
             Checkout
           </h1>
           <p className="mt-2 text-sm text-silver-500">
-            Riepilogo ordine e dati di spedizione — pagamento non ancora attivo.
+            {stripeEnabled
+              ? "Riepilogo ordine e pagamento sicuro con Stripe."
+              : "Riepilogo ordine e dati di spedizione — pagamento online non configurato."}
           </p>
           <div className="mt-10">
-            <CheckoutPageClient initialForm={initialForm} />
+            <CheckoutPageClient
+              initialForm={initialForm}
+              stripeEnabled={stripeEnabled}
+            />
           </div>
         </div>
       </main>

@@ -295,6 +295,11 @@ export type Database = {
           status: string;
           payment_status: string;
           payment_method: string | null;
+          payment_provider: string | null;
+          stripe_session_id: string | null;
+          stripe_payment_intent_id: string | null;
+          stripe_customer_id: string | null;
+          paid_at: string | null;
           shipped_at: string | null;
           completed_at: string | null;
           cancelled_at: string | null;
@@ -325,6 +330,11 @@ export type Database = {
           status?: string;
           payment_status?: string;
           payment_method?: string | null;
+          payment_provider?: string | null;
+          stripe_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          stripe_customer_id?: string | null;
+          paid_at?: string | null;
           shipped_at?: string | null;
           completed_at?: string | null;
           cancelled_at?: string | null;
@@ -355,6 +365,11 @@ export type Database = {
           status?: string;
           payment_status?: string;
           payment_method?: string | null;
+          payment_provider?: string | null;
+          stripe_session_id?: string | null;
+          stripe_payment_intent_id?: string | null;
+          stripe_customer_id?: string | null;
+          paid_at?: string | null;
           shipped_at?: string | null;
           completed_at?: string | null;
           cancelled_at?: string | null;

@@ -12,6 +12,7 @@ type CheckoutFormProps = {
   form: CheckoutFormData;
   errors: CheckoutFormErrors;
   disabled?: boolean;
+  stripeEnabled?: boolean;
   onChange: (field: keyof CheckoutFormData, value: string) => void;
   onSubmit: () => void;
 };
@@ -20,6 +21,7 @@ export function CheckoutForm({
   form,
   errors,
   disabled,
+  stripeEnabled = false,
   onChange,
   onSubmit,
 }: CheckoutFormProps) {
@@ -37,8 +39,9 @@ export function CheckoutForm({
         Dati di spedizione
       </h2>
       <p className="mt-1 text-sm text-silver-500">
-        Compila i campi per completare l&apos;ordine (checkout demo, senza
-        pagamento).
+        {stripeEnabled
+          ? "Compila i dati di spedizione, poi procedi al pagamento sicuro con Stripe (carta, TWINT se disponibile)."
+          : "Compila i campi per completare l'ordine. Il pagamento online non è attivo: confermeremo l'ordine manualmente."}
       </p>
 
       <div className="mt-8 grid gap-5 sm:grid-cols-2">
@@ -174,7 +177,11 @@ export function CheckoutForm({
         disabled={disabled}
         className="mt-8 flex w-full min-h-12 items-center justify-center rounded-full bg-white px-8 text-sm font-semibold text-iron-950 transition hover:bg-silver-300 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {disabled ? "Invio in corso…" : "Conferma ordine"}
+        {disabled
+          ? "Invio in corso…"
+          : stripeEnabled
+            ? "Procedi al pagamento"
+            : "Conferma ordine"}
       </button>
     </form>
   );

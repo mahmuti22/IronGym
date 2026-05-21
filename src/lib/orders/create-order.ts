@@ -6,7 +6,11 @@ import {
 import { createPublicServerSupabaseClient } from "@/lib/supabase/public-server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import type { CreateOrderRequest, CreateOrderResponse } from "./types";
+import type {
+  CreateOrderRequest,
+  CreateOrderOptions,
+  CreateOrderResponse,
+} from "./types";
 import type { CheckoutOrderItemInput } from "./types";
 
 function generateOrderNumber(date = new Date()): string {
@@ -73,8 +77,12 @@ export function computeOrderTotals(lines: ResolvedLine[]) {
 }
 
 export async function createOrderFromCheckout(
-  request: CreateOrderRequest
+  request: CreateOrderRequest,
+  options: CreateOrderOptions = {}
 ): Promise<CreateOrderResponse> {
+  const paymentMethod = options.paymentMethod ?? "manual";
+  const paymentProvider = options.paymentProvider ?? "manual";
+  const sendEmails = options.sendEmails !== false;
   if (!isSupabaseConfigured()) {
     return { ok: false, error: "Supabase non configurato." };
   }
@@ -131,7 +139,8 @@ export async function createOrderFromCheckout(
         currency: "CHF",
         status: "new",
         payment_status: "pending",
-        payment_method: "manual",
+        payment_method: paymentMethod,
+        payment_provider: paymentProvider,
       });
 
     if (!orderError) {
@@ -185,10 +194,12 @@ export async function createOrderFromCheckout(
         lineTotal: line.lineTotal,
       }));
 
-      try {
-        await sendOrderCreatedEmails(emailOrder, emailItems);
-      } catch (err) {
-        console.error("[IronGym] Order emails failed:", err);
+      if (sendEmails) {
+        try {
+          await sendOrderCreatedEmails(emailOrder, emailItems);
+        } catch (err) {
+          console.error("[IronGym] Order emails failed:", err);
+        }
       }
 
       return {
