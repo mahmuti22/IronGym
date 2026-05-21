@@ -130,14 +130,12 @@ export function CartPageClient() {
           </div>
         </dl>
 
-        <button
-          type="button"
-          disabled
-          title="Checkout in arrivo"
-          className="mt-8 flex w-full min-h-12 cursor-not-allowed items-center justify-center rounded-full border border-silver-500/25 bg-white/[0.03] px-6 text-sm font-semibold text-silver-500"
+        <Link
+          href="/checkout"
+          className="mt-8 flex w-full min-h-12 items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-iron-950 transition hover:bg-silver-300"
         >
-          Checkout in arrivo
-        </button>
+          Checkout
+        </Link>
 
         <Link
           href="/shop"
