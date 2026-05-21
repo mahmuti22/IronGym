@@ -39,7 +39,7 @@ function ShoppingCartIcon({ className }: { className?: string }) {
 }
 
 const cartIconButtonClass =
-  "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-silver-500/30 bg-white/[0.04] text-silver-300 transition hover:border-silver-400/50 hover:bg-white/[0.07] hover:text-white";
+  "relative inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-visible rounded-full border border-silver-500/30 bg-white/[0.04] text-silver-300 transition hover:border-silver-400/50 hover:bg-white/[0.07] hover:text-white";
 
 function CartIconLink({
   className = cartIconButtonClass,
@@ -59,14 +59,15 @@ function CartIconLink({
       aria-label="Apri carrello"
       className={className}
     >
-      <span className="relative inline-flex items-center justify-center">
-        <ShoppingCartIcon className={iconClassName} />
-        {ready && itemCount > 0 ? (
-          <span className="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-iron-950 ring-2 ring-iron-950">
-            {itemCount > 99 ? "99+" : itemCount}
-          </span>
-        ) : null}
-      </span>
+      <ShoppingCartIcon className={`${iconClassName} shrink-0`} />
+      {ready && itemCount > 0 ? (
+        <span
+          className="pointer-events-none absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold leading-none text-iron-950 ring-2 ring-iron-950"
+          aria-hidden
+        >
+          {itemCount > 99 ? "99+" : itemCount}
+        </span>
+      ) : null}
     </Link>
   );
 }
