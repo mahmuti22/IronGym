@@ -13,6 +13,8 @@ import {
   shopFilterLabels,
 } from "@/data/shop";
 import type { ShopSubcategory } from "@/data/shop";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { getImageForSelectedColor } from "@/lib/shop/product-image";
 import { ProductTags } from "./ProductTags";
 import { ProductCard } from "./ProductCard";
 
@@ -43,13 +45,11 @@ export function ProductDetail({
   const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] ?? "M");
   const [selectedColor, setSelectedColor] = useState(product.colors?.[0] ?? "");
   const [activeImage, setActiveImage] = useState(0);
-  const [added, setAdded] = useState(false);
+  const [addedFeedback, setAddedFeedback] = useState(false);
 
-  const imageSrc = product.images?.[activeImage] ?? product.image;
-
-  function handleAddToCart() {
-    setAdded(true);
-  }
+  const imageSrc =
+    product.images?.[activeImage] ??
+    getImageForSelectedColor(product, selectedColor);
 
   const optionBtn =
     "rounded-full border px-4 py-2 text-sm font-medium transition";
@@ -218,13 +218,21 @@ export function ProductDetail({
           )}
 
           <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              onClick={handleAddToCart}
-              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-full bg-white px-8 text-sm font-semibold text-iron-950 transition hover:bg-silver-300"
-            >
-              Aggiungi al carrello
-            </button>
+            <AddToCartButton
+              product={product}
+              selectedSize={selectedSize}
+              selectedColor={selectedColor}
+              cartImage={getImageForSelectedColor(product, selectedColor)}
+              onAdded={() => {
+                setAddedFeedback(true);
+                window.setTimeout(() => setAddedFeedback(false), 3000);
+              }}
+              className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full px-8 text-sm font-semibold transition ${
+                addedFeedback
+                  ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/40"
+                  : "bg-white text-iron-950 hover:bg-silver-300"
+              }`}
+            />
             <Link
               href="/shop"
               className="inline-flex min-h-12 items-center justify-center rounded-full border border-silver-400/45 bg-white/[0.04] px-8 text-sm font-semibold text-silver-300 transition hover:border-silver-300/70 hover:text-white"
@@ -233,15 +241,17 @@ export function ProductDetail({
             </Link>
           </div>
 
-          {added && (
+          {addedFeedback && (
             <motion.p
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 text-sm text-silver-400"
             >
               {product.name} ({selectedSize}
-              {selectedColor ? ` · ${selectedColor}` : ""}) aggiunto al carrello
-              — checkout in arrivo.
+              {selectedColor ? ` · ${selectedColor}` : ""}) aggiunto al carrello.{" "}
+              <Link href="/cart" className="font-semibold text-silver-200 hover:text-white">
+                Vai al carrello →
+              </Link>
             </motion.p>
           )}
         </div>

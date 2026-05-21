@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCart } from "@/components/cart/CartProvider";
 import { IRON_GYM_HOME_INTRO_EVENT } from "@/lib/home-intro";
 
 const nav = [
@@ -15,6 +16,27 @@ const nav = [
 
 function playHomeIntro() {
   window.dispatchEvent(new Event(IRON_GYM_HOME_INTRO_EVENT));
+}
+
+function CartNavLink({
+  className,
+  onNavigate,
+}: {
+  className: string;
+  onNavigate?: () => void;
+}) {
+  const { itemCount, ready } = useCart();
+
+  return (
+    <Link href="/cart" onClick={onNavigate} className={className}>
+      Carrello
+      {ready && itemCount > 0 ? (
+        <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold leading-none text-iron-950">
+          {itemCount > 99 ? "99+" : itemCount}
+        </span>
+      ) : null}
+    </Link>
+  );
 }
 
 export function Header() {
@@ -47,9 +69,11 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          <CartNavLink className="inline-flex items-center text-sm font-medium text-silver-500 transition hover:text-silver-300" />
         </nav>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-3 md:flex">
+          <CartNavLink className="inline-flex items-center rounded-full border border-silver-500/30 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-silver-300 transition hover:border-silver-400/50 hover:text-white" />
           <Link
             href="/shop"
             className="inline-flex items-center justify-center rounded-full border border-silver-400/40 bg-white/[0.04] px-5 py-2 text-sm font-semibold text-silver-300 shadow-[0_0_0_1px_rgba(0,0,0,0.35)_inset] transition hover:border-silver-300/60 hover:bg-white/[0.07] hover:text-white"
@@ -109,6 +133,10 @@ export function Header() {
                   {item.label}
                 </Link>
               ))}
+              <CartNavLink
+                className="rounded-lg px-3 py-3 text-sm font-medium text-silver-400 transition hover:bg-white/[0.04] hover:text-silver-300"
+                onNavigate={() => setOpen(false)}
+              />
               <Link
                 href="/login"
                 onClick={() => setOpen(false)}

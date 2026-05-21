@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bebas_Neue, Inter } from "next/font/google";
+import { CartProvider } from "@/components/cart/CartProvider";
 import "./globals.css";
 
 const display = Bebas_Neue({
@@ -28,7 +29,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="it" className={`${display.variable} ${sans.variable}`}>
-      <body className="font-sans min-h-dvh">{children}</body>
+      <body className="font-sans min-h-dvh">
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   );
 }
