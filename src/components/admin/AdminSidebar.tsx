@@ -12,6 +12,7 @@ const nav = [
   { href: "/admin/products/new", label: "Nuovo prodotto", icon: "+", exact: true },
   { href: "/admin/categories", label: "Categorie", icon: "☰", exact: true },
   { href: "/admin/collections", label: "Collezioni", icon: "◎", exact: true },
+  { href: "/admin/orders", label: "Ordini", icon: "◇", exact: false },
 ] as const;
 
 function isNavActive(pathname: string, href: string, exact: boolean) {

@@ -5,12 +5,8 @@ import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 import { CheckoutForm } from "./CheckoutForm";
 import { OrderSummary } from "./OrderSummary";
-import {
-  buildCheckoutOrderDraft,
-  generatePlaceholderOrderNumber,
-  hasCheckoutErrors,
-  validateCheckoutForm,
-} from "@/lib/checkout/validation";
+import { cartLineToOrderItem } from "@/lib/orders/validation";
+import { hasCheckoutErrors, validateCheckoutForm } from "@/lib/checkout/validation";
 import {
   emptyCheckoutForm,
   type CheckoutFormData,
@@ -26,6 +22,7 @@ export function CheckoutPageClient() {
   const [errors, setErrors] = useState<CheckoutFormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   function updateField(field: keyof CheckoutFormData, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -43,20 +40,41 @@ export function CheckoutPageClient() {
     if (hasCheckoutErrors(validation)) return;
 
     setSubmitting(true);
+    setSubmitError(null);
 
-    const number = generatePlaceholderOrderNumber();
-    const draft = buildCheckoutOrderDraft(form, items, subtotal, number);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer: form,
+          items: items.map(cartLineToOrderItem),
+        }),
+      });
 
-    // Future: await submitCheckoutOrder(draft) → Supabase + Stripe session
-    if (process.env.NODE_ENV === "development") {
-      console.info("[IronGym Checkout placeholder]", draft);
+      const data = (await res.json()) as {
+        ok?: boolean;
+        orderNumber?: string;
+        error?: string;
+      };
+
+      if (!res.ok || !data.ok || !data.orderNumber) {
+        setSubmitError(
+          data.error ?? "Impossibile creare l'ordine. Riprova tra poco."
+        );
+        setSubmitting(false);
+        return;
+      }
+
+      setOrderNumber(data.orderNumber);
+      clear();
+      setStep("success");
+    } catch {
+      setSubmitError(
+        "Errore di connessione. Verifica la rete e riprova."
+      );
     }
 
-    await new Promise((r) => setTimeout(r, 400));
-
-    setOrderNumber(number);
-    clear();
-    setStep("success");
     setSubmitting(false);
   }
 
@@ -97,8 +115,8 @@ export function CheckoutPageClient() {
           Grazie per il tuo ordine
         </h2>
         <p className="mt-3 text-sm text-silver-400">
-          Il checkout reale sarà disponibile presto. Questa è una conferma demo
-          senza pagamento.
+          Il pagamento online sarà disponibile presto. Il tuo ordine è stato
+          registrato — ti contatteremo per la conferma.
         </p>
         <p className="mt-6 font-mono text-lg tracking-wide text-white">
           {orderNumber}
@@ -126,6 +144,14 @@ export function CheckoutPageClient() {
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:items-start">
+      {submitError && (
+        <p
+          role="alert"
+          className="lg:col-span-2 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+        >
+          {submitError}
+        </p>
+      )}
       <CheckoutForm
         form={form}
         errors={errors}
