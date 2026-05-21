@@ -63,13 +63,23 @@ export function AdminBadge({
   variant = "default",
 }: {
   children: ReactNode;
-  variant?: "default" | "success" | "warning" | "muted";
+  variant?:
+    | "default"
+    | "success"
+    | "warning"
+    | "muted"
+    | "info"
+    | "danger"
+    | "teal";
 }) {
   const styles = {
     default: "border-white/15 bg-white/[0.08] text-zinc-200",
     success: "border-emerald-400/25 bg-emerald-500/15 text-emerald-200",
     warning: "border-amber-400/25 bg-amber-500/15 text-amber-100",
     muted: "border-white/10 bg-white/[0.04] text-zinc-400",
+    info: "border-sky-400/25 bg-sky-500/15 text-sky-100",
+    danger: "border-red-400/25 bg-red-500/15 text-red-200",
+    teal: "border-teal-400/25 bg-teal-500/15 text-teal-100",
   };
   return (
     <span

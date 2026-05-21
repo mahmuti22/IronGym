@@ -241,6 +241,9 @@ export type Database = {
           shipping_postcode: string;
           shipping_country: string;
           customer_notes: string | null;
+          internal_notes: string | null;
+          tracking_number: string | null;
+          shipping_carrier: string | null;
           subtotal: number;
           shipping_total: number;
           discount_total: number;
@@ -249,6 +252,9 @@ export type Database = {
           status: string;
           payment_status: string;
           payment_method: string | null;
+          shipped_at: string | null;
+          completed_at: string | null;
+          cancelled_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -264,6 +270,9 @@ export type Database = {
           shipping_postcode: string;
           shipping_country: string;
           customer_notes?: string | null;
+          internal_notes?: string | null;
+          tracking_number?: string | null;
+          shipping_carrier?: string | null;
           subtotal?: number;
           shipping_total?: number;
           discount_total?: number;
@@ -272,6 +281,9 @@ export type Database = {
           status?: string;
           payment_status?: string;
           payment_method?: string | null;
+          shipped_at?: string | null;
+          completed_at?: string | null;
+          cancelled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -287,6 +299,9 @@ export type Database = {
           shipping_postcode?: string;
           shipping_country?: string;
           customer_notes?: string | null;
+          internal_notes?: string | null;
+          tracking_number?: string | null;
+          shipping_carrier?: string | null;
           subtotal?: number;
           shipping_total?: number;
           discount_total?: number;
@@ -295,6 +310,9 @@ export type Database = {
           status?: string;
           payment_status?: string;
           payment_method?: string | null;
+          shipped_at?: string | null;
+          completed_at?: string | null;
+          cancelled_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

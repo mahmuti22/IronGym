@@ -1,10 +1,15 @@
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import {
+  shouldSendOrderStatusEmail,
+  sendOrderStatusUpdateEmail,
+} from "@/lib/email/order-status-emails";
 import type {
   AdminOrder,
   AdminOrderItem,
   OrderStatus,
   PaymentStatus,
+  UpdateOrderInput,
 } from "@/lib/orders/types";
 import { isOrderStatus, isPaymentStatus } from "@/lib/orders/validation";
 import type { Database } from "@/types/database";
@@ -47,6 +52,9 @@ function mapOrder(row: DbOrder, items: AdminOrderItem[] = []): AdminOrder {
     shippingPostcode: row.shipping_postcode,
     shippingCountry: row.shipping_country,
     customerNotes: row.customer_notes,
+    internalNotes: row.internal_notes,
+    trackingNumber: row.tracking_number,
+    shippingCarrier: row.shipping_carrier,
     subtotal: Number(row.subtotal),
     shippingTotal: Number(row.shipping_total),
     discountTotal: Number(row.discount_total),
@@ -57,6 +65,9 @@ function mapOrder(row: DbOrder, items: AdminOrderItem[] = []): AdminOrder {
     paymentMethod: row.payment_method,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    shippedAt: row.shipped_at,
+    completedAt: row.completed_at,
+    cancelledAt: row.cancelled_at,
     items,
   };
 }
@@ -113,11 +124,14 @@ export async function fetchOrderById(
   };
 }
 
-export async function updateOrderStatus(
+export async function updateOrder(
   id: string,
-  status: OrderStatus,
-  paymentStatus: PaymentStatus
+  input: UpdateOrderInput,
+  previousStatus?: OrderStatus
 ): Promise<AdminActionResult<AdminOrder>> {
+  const { status, paymentStatus, internalNotes, trackingNumber, shippingCarrier } =
+    input;
+
   if (!isOrderStatus(status) || !isPaymentStatus(paymentStatus)) {
     return { ok: false, error: "Stato non valido." };
   }
@@ -131,7 +145,13 @@ export async function updateOrderStatus(
 
   const { data, error } = await supabase
     .from("orders")
-    .update({ status, payment_status: paymentStatus })
+    .update({
+      status,
+      payment_status: paymentStatus,
+      internal_notes: internalNotes?.trim() || null,
+      tracking_number: trackingNumber?.trim() || null,
+      shipping_carrier: shippingCarrier?.trim() || null,
+    })
     .eq("id", id)
     .select()
     .single();
@@ -139,8 +159,43 @@ export async function updateOrderStatus(
   if (error) return { ok: false, error: error.message };
 
   const detail = await fetchOrderById(id);
-  return {
-    ok: true,
-    data: detail.data ?? mapOrder(data),
-  };
+  const updated = detail.data ?? mapOrder(data);
+
+  if (
+    previousStatus &&
+    previousStatus !== status &&
+    shouldSendOrderStatusEmail(previousStatus, status)
+  ) {
+    try {
+      await sendOrderStatusUpdateEmail({
+        order: updated,
+        previousStatus,
+        nextStatus: status,
+      });
+    } catch (err) {
+      console.error("[IronGym] Order status email failed:", err);
+    }
+  }
+
+  return { ok: true, data: updated };
+}
+
+/** @deprecated Use updateOrder */
+export async function updateOrderStatus(
+  id: string,
+  status: OrderStatus,
+  paymentStatus: PaymentStatus
+): Promise<AdminActionResult<AdminOrder>> {
+  const existing = await fetchOrderById(id);
+  return updateOrder(
+    id,
+    {
+      status,
+      paymentStatus,
+      internalNotes: existing.data?.internalNotes ?? null,
+      trackingNumber: existing.data?.trackingNumber ?? null,
+      shippingCarrier: existing.data?.shippingCarrier ?? null,
+    },
+    existing.data?.status
+  );
 }

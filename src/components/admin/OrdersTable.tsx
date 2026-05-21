@@ -5,57 +5,23 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchOrders } from "@/lib/admin/orders";
 import type { AdminOrder } from "@/lib/orders/types";
 import {
-  ORDER_STATUSES,
+  ORDER_QUICK_FILTERS,
   PAYMENT_STATUSES,
-  orderStatusLabels,
   paymentStatusLabels,
-  type OrderStatus,
+  type OrderQuickFilter,
   type PaymentStatus,
 } from "@/lib/orders/types";
 import { formatPrice } from "@/data/shop";
+import { OrderStatusBadge, PaymentStatusBadge } from "./order-badges";
 import {
-  AdminBadge,
   adminBtnGhostClass,
   adminCaptionClass,
   adminInputClass,
   adminMutedTextClass,
   adminTableHeadCellClass,
   adminTableHeadRowClass,
-  adminTableRowClass,
   adminTableShellClass,
 } from "./admin-ui";
-
-function statusBadgeVariant(status: OrderStatus) {
-  switch (status) {
-    case "new":
-      return "warning" as const;
-    case "processing":
-      return "default" as const;
-    case "shipped":
-      return "success" as const;
-    case "completed":
-      return "success" as const;
-    case "cancelled":
-      return "muted" as const;
-    default:
-      return "default" as const;
-  }
-}
-
-function paymentBadgeVariant(status: PaymentStatus) {
-  switch (status) {
-    case "paid":
-      return "success" as const;
-    case "pending":
-      return "warning" as const;
-    case "failed":
-      return "muted" as const;
-    case "refunded":
-      return "default" as const;
-    default:
-      return "default" as const;
-  }
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString("it-CH", {
@@ -64,12 +30,21 @@ function formatDate(iso: string) {
   });
 }
 
+function orderRowClass(order: AdminOrder): string {
+  const base =
+    "border-b border-white/[0.08] transition-colors hover:bg-white/[0.06]";
+  if (order.status === "new") {
+    return `${base} border-l-4 border-l-amber-400/80 bg-amber-500/[0.07] hover:bg-amber-500/10`;
+  }
+  return base;
+}
+
 export function OrdersTable() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
+  const [quickFilter, setQuickFilter] = useState<OrderQuickFilter>("all");
   const [paymentFilter, setPaymentFilter] = useState<PaymentStatus | "all">(
     "all"
   );
@@ -84,10 +59,15 @@ export function OrdersTable() {
     })();
   }, []);
 
+  const newCount = useMemo(
+    () => orders.filter((o) => o.status === "new").length,
+    [orders]
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return orders.filter((o) => {
-      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      if (quickFilter !== "all" && o.status !== quickFilter) return false;
       if (paymentFilter !== "all" && o.paymentStatus !== paymentFilter) {
         return false;
       }
@@ -97,12 +77,13 @@ export function OrdersTable() {
         o.customerEmail,
         o.customerFirstName,
         o.customerLastName,
+        `${o.customerFirstName} ${o.customerLastName}`,
       ]
         .join(" ")
         .toLowerCase();
       return haystack.includes(q);
     });
-  }, [orders, search, statusFilter, paymentFilter]);
+  }, [orders, search, quickFilter, paymentFilter]);
 
   if (loading) {
     return (
@@ -122,34 +103,43 @@ export function OrdersTable() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {ORDER_QUICK_FILTERS.map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setQuickFilter(f.id)}
+            className={`rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
+              quickFilter === f.id
+                ? "border-amber-400/40 bg-amber-500/20 text-amber-100"
+                : "border-white/10 bg-white/[0.04] text-zinc-400 hover:border-white/20 hover:text-zinc-200"
+            }`}
+          >
+            {f.label}
+            {f.id === "new" && newCount > 0 && (
+              <span className="ml-1.5 inline-flex min-w-[1.25rem] justify-center rounded-full bg-amber-500/30 px-1.5 text-[10px] text-amber-50">
+                {newCount}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
         <input
           type="search"
-          placeholder="Cerca numero ordine, email, cliente…"
+          placeholder="Cerca numero ordine, email, nome cliente…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className={`max-w-md flex-1 ${adminInputClass}`}
         />
         <select
-          value={statusFilter}
-          onChange={(e) =>
-            setStatusFilter(e.target.value as OrderStatus | "all")
-          }
-          className={adminInputClass}
-        >
-          <option value="all">Tutti gli status</option>
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {orderStatusLabels[s]}
-            </option>
-          ))}
-        </select>
-        <select
           value={paymentFilter}
           onChange={(e) =>
             setPaymentFilter(e.target.value as PaymentStatus | "all")
           }
-          className={adminInputClass}
+          className={`max-w-xs ${adminInputClass}`}
+          aria-label="Filtra per pagamento"
         >
           <option value="all">Tutti i pagamenti</option>
           {PAYMENT_STATUSES.map((s) => (
@@ -162,7 +152,7 @@ export function OrdersTable() {
 
       <div className={adminTableShellClass}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[960px] text-left text-sm">
             <thead>
               <tr className={adminTableHeadRowClass}>
                 <th className={adminTableHeadCellClass}>Ordine</th>
@@ -186,11 +176,19 @@ export function OrdersTable() {
                 </tr>
               ) : (
                 filtered.map((o) => (
-                  <tr key={o.id} className={adminTableRowClass}>
+                  <tr key={o.id} className={orderRowClass(o)}>
                     <td className="px-4 py-3">
-                      <p className="font-mono text-sm font-medium text-zinc-100">
-                        {o.orderNumber}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        {o.status === "new" && (
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"
+                            title="Nuovo ordine"
+                          />
+                        )}
+                        <p className="font-mono text-sm font-medium text-zinc-100">
+                          {o.orderNumber}
+                        </p>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-zinc-100">
@@ -202,16 +200,10 @@ export function OrdersTable() {
                       {formatPrice(o.total)}
                     </td>
                     <td className="px-4 py-3">
-                      <AdminBadge variant={statusBadgeVariant(o.status)}>
-                        {orderStatusLabels[o.status]}
-                      </AdminBadge>
+                      <OrderStatusBadge status={o.status} />
                     </td>
                     <td className="px-4 py-3">
-                      <AdminBadge
-                        variant={paymentBadgeVariant(o.paymentStatus)}
-                      >
-                        {paymentStatusLabels[o.paymentStatus]}
-                      </AdminBadge>
+                      <PaymentStatusBadge status={o.paymentStatus} />
                     </td>
                     <td className={`px-4 py-3 ${adminCaptionClass}`}>
                       {formatDate(o.createdAt)}
@@ -221,7 +213,7 @@ export function OrdersTable() {
                         href={`/admin/orders/${o.id}`}
                         className={adminBtnGhostClass}
                       >
-                        Apri
+                        Apri →
                       </Link>
                     </td>
                   </tr>
@@ -233,6 +225,7 @@ export function OrdersTable() {
       </div>
       <p className={adminCaptionClass}>
         {filtered.length} di {orders.length} ordini
+        {newCount > 0 && ` · ${newCount} nuov${newCount === 1 ? "o" : "i"}`}
       </p>
     </div>
   );

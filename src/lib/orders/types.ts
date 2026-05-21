@@ -76,6 +76,9 @@ export type AdminOrder = {
   shippingPostcode: string;
   shippingCountry: string;
   customerNotes: string | null;
+  internalNotes: string | null;
+  trackingNumber: string | null;
+  shippingCarrier: string | null;
   subtotal: number;
   shippingTotal: number;
   discountTotal: number;
@@ -86,8 +89,30 @@ export type AdminOrder = {
   paymentMethod: string | null;
   createdAt: string;
   updatedAt: string;
+  shippedAt: string | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
   items?: AdminOrderItem[];
 };
+
+export type UpdateOrderInput = {
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  internalNotes: string | null;
+  trackingNumber: string | null;
+  shippingCarrier: string | null;
+};
+
+export type OrderQuickFilter = OrderStatus | "all";
+
+export const ORDER_QUICK_FILTERS: { id: OrderQuickFilter; label: string }[] = [
+  { id: "all", label: "Tutti" },
+  { id: "new", label: "Nuovi" },
+  { id: "processing", label: "Da processare" },
+  { id: "shipped", label: "Spediti" },
+  { id: "completed", label: "Completati" },
+  { id: "cancelled", label: "Cancellati" },
+];
 
 export const orderStatusLabels: Record<OrderStatus, string> = {
   new: "Nuovo",
