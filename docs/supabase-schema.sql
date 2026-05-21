@@ -128,7 +128,8 @@ create index if not exists product_images_product_id_idx on public.product_image
 
 -- ---------------------------------------------------------------------------
 -- Admin auth: run docs/supabase-auth-admin.sql after this file
--- Stricter RLS: docs/supabase-rls-recommended.sql (optional, after admins exist)
+-- Production RLS: docs/supabase-rls-production.sql (after admins exist)
+-- Legacy: docs/supabase-rls-recommended.sql (superseded by production file)
 -- ---------------------------------------------------------------------------
 
 -- ---------------------------------------------------------------------------
