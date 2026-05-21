@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useState } from "react";
 import { Reveal } from "./Reveal";
 import { IronGymMark } from "./IronGymMark";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 const inputClass =
   "min-h-12 w-full rounded-xl border border-silver-400/45 bg-white/[0.08] px-4 text-sm text-silver-200 outline-none placeholder:text-silver-600 focus:border-silver-300/65 focus:bg-white/[0.12]";
 
 export function LoginForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [password, setPassword] = useState("");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -87,14 +89,12 @@ export function LoginForm() {
                           Passwort vergessen?
                         </Link>
                       </div>
-                      <input
+                      <PasswordInput
                         id="login-password"
-                        name="password"
-                        type="password"
-                        required
-                        autoComplete="current-password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        inputClassName={inputClass}
                         placeholder="••••••••"
-                        className={inputClass}
                       />
                     </div>
 

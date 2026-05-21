@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useAdmin } from "./AdminProvider";
-import { AdminCard, adminInputClass, adminLabelClass } from "./admin-ui";
+import {
+  AdminCard,
+  adminBtnGhostClass,
+  adminBtnPrimaryClass,
+  adminCaptionClass,
+  adminInputClass,
+  adminLabelClass,
+  adminMutedTextClass,
+  adminSectionTitleClass,
+} from "./admin-ui";
 import { getGroupPath, getSubcategoryPath } from "@/data/shop";
 
 export function CollectionsView() {
@@ -40,7 +49,7 @@ export function CollectionsView() {
 
   if (loading) {
     return (
-      <p className="py-12 text-center text-silver-500">
+      <p className={`py-12 text-center ${adminMutedTextClass}`}>
         Caricamento collezioni…
       </p>
     );
@@ -52,14 +61,14 @@ export function CollectionsView() {
     <div className="space-y-8">
       {colGroup && (
         <AdminCard className="p-6">
-          <h2 className="text-lg font-semibold text-silver-200">
+          <h2 className="text-lg font-semibold text-white">
             {colGroup.title}
           </h2>
-          <p className="mt-2 text-sm text-silver-500">{colGroup.description}</p>
+          <p className={`mt-2 ${adminMutedTextClass}`}>{colGroup.description}</p>
           <Link
             href={getGroupPath("collezioni")}
             target="_blank"
-            className="mt-4 inline-block text-xs font-semibold text-silver-400 hover:text-silver-200"
+            className={`mt-4 inline-block ${adminBtnGhostClass}`}
           >
             Vedi pagina collezioni →
           </Link>
@@ -67,7 +76,7 @@ export function CollectionsView() {
       )}
 
       <section>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-silver-500">
+        <h2 className={`mb-4 ${adminSectionTitleClass}`}>
           Linee collezione ({collectionSubcategories.length})
         </h2>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -102,7 +111,7 @@ export function CollectionsView() {
                     type="button"
                     disabled={saving}
                     onClick={() => saveCollection(sub.id)}
-                    className="text-xs font-semibold text-silver-400 disabled:opacity-50"
+                    className={`${adminBtnPrimaryClass} px-4 py-2 text-xs disabled:opacity-50`}
                   >
                     {saving
                       ? "Salvataggio…"
@@ -113,23 +122,23 @@ export function CollectionsView() {
                 </div>
               ) : (
                 <>
-                  <h3 className="font-semibold text-silver-200">{sub.title}</h3>
-                  <p className="mt-2 text-sm text-silver-500">{sub.description}</p>
-                  <p className="mt-2 text-xs text-silver-600">
+                  <h3 className="font-semibold text-white">{sub.title}</h3>
+                  <p className={`mt-2 ${adminMutedTextClass}`}>{sub.description}</p>
+                  <p className={`mt-2 ${adminCaptionClass}`}>
                     /shop/collezioni/{sub.slug}
                   </p>
                   <div className="mt-4 flex gap-3">
                     <button
                       type="button"
                       onClick={() => setEditingSub(sub.id)}
-                      className="text-xs font-semibold text-silver-400 hover:text-white"
+                      className={adminBtnGhostClass}
                     >
                       Modifica
                     </button>
                     <Link
                       href={getSubcategoryPath(sub)}
                       target="_blank"
-                      className="text-xs font-semibold text-silver-500 hover:text-silver-300"
+                      className={adminBtnGhostClass}
                     >
                       Vedi shop →
                     </Link>

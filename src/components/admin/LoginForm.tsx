@@ -10,7 +10,8 @@ import {
   logAdminAuthDebug,
   logSupabaseProjectDebug,
 } from "@/lib/admin/auth-check";
-import { adminInputClass, adminLabelClass } from "./admin-ui";
+import { adminBtnPrimaryClass, adminInputClass, adminLabelClass } from "./admin-ui";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -173,14 +174,11 @@ export function AdminLoginForm() {
         <label className={adminLabelClass} htmlFor="admin-password">
           Password
         </label>
-        <input
+        <PasswordInput
           id="admin-password"
-          type="password"
-          required
-          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className={adminInputClass}
+          inputClassName={adminInputClass}
           placeholder="••••••••"
           disabled={!supabaseReady || submitting}
         />
@@ -189,7 +187,7 @@ export function AdminLoginForm() {
       <button
         type="submit"
         disabled={!supabaseReady || submitting}
-        className="w-full min-h-12 rounded-full bg-white text-sm font-semibold text-iron-950 transition hover:bg-silver-300 disabled:cursor-not-allowed disabled:opacity-50"
+        className={`${adminBtnPrimaryClass} w-full min-h-12 disabled:cursor-not-allowed disabled:opacity-50`}
       >
         {submitting ? "Accesso in corso…" : "Accedi al pannello"}
       </button>

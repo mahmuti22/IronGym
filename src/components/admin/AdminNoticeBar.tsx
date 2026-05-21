@@ -14,7 +14,7 @@ export function AdminNoticeBar() {
 
   if (loading) {
     return (
-      <div className="border-b border-white/[0.08] bg-white/[0.03] px-4 py-2 text-center text-xs text-silver-500 sm:px-8">
+      <div className="border-b border-white/10 bg-white/[0.05] px-4 py-2 text-center text-xs text-zinc-400 sm:px-8">
         Caricamento dati…
       </div>
     );
@@ -22,9 +22,9 @@ export function AdminNoticeBar() {
 
   return (
     <div className="space-y-0">
-      <div className="border-b border-white/[0.08] bg-white/[0.03] px-4 py-2 text-center text-xs text-silver-600 sm:px-8">
+      <div className="border-b border-white/10 bg-white/[0.05] px-4 py-2 text-center text-xs text-zinc-300 sm:px-8">
         Fonte dati:{" "}
-        <span className="font-semibold text-silver-400">
+        <span className="font-semibold text-zinc-100">
           {dataSource === "supabase" ? "Supabase" : "Mock locale"}
         </span>
       </div>

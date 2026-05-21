@@ -43,13 +43,13 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="flex w-full flex-col border-r border-white/[0.08] bg-iron-900/80 lg:w-64 lg:shrink-0">
-      <div className="border-b border-white/[0.08] px-5 py-6">
+    <aside className="flex w-full flex-col border-r border-white/10 bg-[#14141c]/85 backdrop-blur-xl lg:w-64 lg:shrink-0">
+      <div className="border-b border-white/10 px-5 py-6">
         <Link href="/admin" className="block">
-          <span className="text-lg font-bold tracking-tight text-silver-200">
-            Iron<span className="text-silver-500">Gym</span>
+          <span className="text-lg font-bold tracking-tight text-zinc-100">
+            Iron<span className="text-zinc-400">Gym</span>
           </span>
-          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.35em] text-silver-600">
+          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.35em] text-zinc-400">
             Admin Panel
           </span>
         </Link>
@@ -65,8 +65,8 @@ export function AdminSidebar() {
               href={item.href}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                 active
-                  ? "bg-white/[0.1] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset]"
-                  : "text-silver-500 hover:bg-white/[0.04] hover:text-silver-300"
+                  ? "bg-white/[0.12] text-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)_inset]"
+                  : "text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-100"
               }`}
             >
               <span className="text-xs opacity-60" aria-hidden>
@@ -78,11 +78,11 @@ export function AdminSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-white/[0.08] p-4 space-y-2">
+      <div className="border-t border-white/10 p-4 space-y-2">
         <Link
           href="/"
           target="_blank"
-          className="flex items-center justify-center rounded-xl border border-silver-500/30 bg-white/[0.03] px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-silver-400 transition hover:border-silver-400/50 hover:text-silver-200"
+          className="flex items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] px-3 py-2.5 text-xs font-semibold uppercase tracking-wider text-zinc-300 transition hover:border-white/25 hover:bg-white/[0.1] hover:text-white"
         >
           Vai al sito →
         </Link>

@@ -6,7 +6,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAdmin } from "./AdminProvider";
 import type { ProductStatus } from "@/lib/admin/types";
-import { AdminCard, adminInputClass, adminLabelClass } from "./admin-ui";
+import {
+  AdminCard,
+  adminBtnPrimaryClass,
+  adminBtnSecondaryClass,
+  adminCaptionClass,
+  adminInputClass,
+  adminLabelClass,
+  adminSectionTitleClass,
+} from "./admin-ui";
 import { CATALOG_STUDIO_MODEL_01 } from "@/data/catalog";
 import {
   MAIN_CATEGORY,
@@ -173,7 +181,7 @@ export function ProductForm() {
       <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
         <div className="space-y-6">
           <AdminCard className="p-6">
-            <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-silver-500">
+            <h2 className={`mb-6 ${adminSectionTitleClass}`}>
               Informazioni base
             </h2>
             <div className="grid gap-5 sm:grid-cols-2">
@@ -231,7 +239,7 @@ export function ProductForm() {
           </AdminCard>
 
           <AdminCard className="p-6">
-            <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-silver-500">
+            <h2 className={`mb-6 ${adminSectionTitleClass}`}>
               Catalogazione
             </h2>
             <div className="grid gap-5 sm:grid-cols-2">
@@ -313,7 +321,7 @@ export function ProductForm() {
           </AdminCard>
 
           <AdminCard className="p-6">
-            <h2 className="mb-6 text-sm font-semibold uppercase tracking-widest text-silver-500">
+            <h2 className={`mb-6 ${adminSectionTitleClass}`}>
               Dettagli prodotto
             </h2>
             <div className="grid gap-5 sm:grid-cols-2">
@@ -364,7 +372,7 @@ export function ProductForm() {
           </AdminCard>
 
           <AdminCard className="p-6">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-silver-500">
+            <h2 className={`mb-4 ${adminSectionTitleClass}`}>
               Tag
             </h2>
             <div className="flex flex-wrap gap-2">
@@ -375,8 +383,8 @@ export function ProductForm() {
                   onClick={() => toggleTag(tag)}
                   className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-wider transition ${
                     form.tags.includes(tag)
-                      ? "border-silver-300/70 bg-white text-iron-950"
-                      : "border-silver-500/35 text-silver-500 hover:border-silver-400/50"
+                      ? "border-white/30 bg-white text-iron-950 shadow-sm"
+                      : "border-white/15 bg-white/[0.06] text-zinc-300 hover:border-white/25 hover:bg-white/[0.1] hover:text-white"
                   }`}
                 >
                   {tag}
@@ -388,10 +396,10 @@ export function ProductForm() {
 
         <div className="space-y-6">
           <AdminCard className="p-6">
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-widest text-silver-500">
+            <h2 className={`mb-4 ${adminSectionTitleClass}`}>
               Immagine
             </h2>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-iron-950">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-xl border border-white/10 bg-black/40">
               <Image
                 src={previewImage ?? CATALOG_STUDIO_MODEL_01}
                 alt="Anteprima"
@@ -399,11 +407,11 @@ export function ProductForm() {
                 className={`object-cover ${productImageFocusClasses[form.imageFocusIndex]}`}
               />
             </div>
-            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-silver-500/40 bg-white/[0.02] px-4 py-8 text-center transition hover:border-silver-400/50 hover:bg-white/[0.04]">
-              <span className="text-xs font-semibold uppercase tracking-widest text-silver-500">
+            <label className="mt-4 flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-white/20 bg-white/[0.06] px-4 py-8 text-center transition hover:border-white/30 hover:bg-white/[0.08]">
+              <span className="text-xs font-semibold uppercase tracking-widest text-zinc-300">
                 Carica immagine (anteprima locale)
               </span>
-              <span className="mt-1 text-[10px] text-silver-600">
+              <span className={`mt-1 ${adminCaptionClass}`}>
                 PNG, JPG — non salvata su server
               </span>
               <input
@@ -434,13 +442,13 @@ export function ProductForm() {
             <button
               type="submit"
               disabled={saving}
-              className="min-h-12 rounded-full bg-white text-sm font-semibold text-iron-950 transition hover:bg-silver-300 disabled:opacity-60"
+              className={`${adminBtnPrimaryClass} min-h-12 w-full disabled:opacity-60`}
             >
               {saving ? "Salvataggio…" : "Salva prodotto"}
             </button>
             <Link
               href="/admin/products"
-              className="inline-flex min-h-11 items-center justify-center rounded-full border border-silver-500/35 text-sm font-semibold text-silver-400 transition hover:text-silver-200"
+              className={`${adminBtnSecondaryClass} min-h-11 w-full`}
             >
               Annulla
             </Link>

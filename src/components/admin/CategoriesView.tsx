@@ -3,7 +3,19 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAdmin } from "./AdminProvider";
-import { AdminCard, adminInputClass, adminLabelClass } from "./admin-ui";
+import {
+  AdminCard,
+  adminBtnDangerClass,
+  adminBtnGhostClass,
+  adminBtnPrimaryClass,
+  adminBtnSecondaryClass,
+  adminCaptionClass,
+  adminCardInnerClass,
+  adminInputClass,
+  adminLabelClass,
+  adminMutedTextClass,
+  adminSectionTitleClass,
+} from "./admin-ui";
 import { countProductsForCategory } from "@/lib/admin/categories";
 import { slugify } from "@/lib/admin/mappers";
 import { categoryPathSlug } from "@/lib/shop/category-utils";
@@ -143,7 +155,9 @@ export function CategoriesView() {
 
   if (loading) {
     return (
-      <p className="py-12 text-center text-silver-500">Caricamento categorie…</p>
+      <p className={`py-12 text-center ${adminMutedTextClass}`}>
+        Caricamento categorie…
+      </p>
     );
   }
 
@@ -157,7 +171,7 @@ export function CategoriesView() {
 
       {form && (
         <AdminCard className="p-6">
-          <h3 className="text-sm font-semibold uppercase tracking-widest text-silver-500">
+          <h3 className={adminSectionTitleClass}>
             {form.id ? "Modifica categoria" : "Nuova categoria"}
           </h3>
           <form onSubmit={handleSave} className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -267,14 +281,14 @@ export function CategoriesView() {
               <button
                 type="submit"
                 disabled={saving}
-                className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-iron-950 disabled:opacity-50"
+                className={`${adminBtnPrimaryClass} disabled:opacity-50`}
               >
                 {saving ? "Salvataggio…" : "Salva"}
               </button>
               <button
                 type="button"
                 onClick={() => setForm(null)}
-                className="text-sm font-semibold text-silver-500 hover:text-silver-300"
+                className={adminBtnGhostClass}
               >
                 Annulla
               </button>
@@ -287,7 +301,7 @@ export function CategoriesView() {
         <button
           type="button"
           onClick={() => openCreateParent("uomo")}
-          className="rounded-full border border-silver-500/35 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-silver-400 hover:text-white"
+          className={`${adminBtnSecondaryClass} px-4 py-2 text-xs uppercase tracking-wider`}
         >
           + Categoria principale
         </button>
@@ -305,30 +319,30 @@ export function CategoriesView() {
               onClick={() =>
                 setExpanded((e) => ({ ...e, [group]: !isOpen }))
               }
-              className="flex w-full items-center justify-between gap-4 border-b border-white/[0.06] bg-white/[0.03] px-5 py-4 text-left"
+              className="flex w-full items-center justify-between gap-4 border-b border-white/10 bg-white/[0.06] px-5 py-4 text-left transition hover:bg-white/[0.08]"
             >
               <div>
-                <h3 className="text-lg font-semibold text-silver-200">
+                <h3 className="text-lg font-semibold text-white">
                   {shopFilterLabels[group]}
                 </h3>
-                <p className="text-xs text-silver-600">
+                <p className={adminCaptionClass}>
                   {children.length} sottocategorie
                   {parent ? ` · principale: ${parent.name}` : " · principale non creata"}
                 </p>
               </div>
-              <span className="text-silver-500">{isOpen ? "−" : "+"}</span>
+              <span className="text-zinc-400">{isOpen ? "−" : "+"}</span>
             </button>
 
             {isOpen && (
               <div className="space-y-4 p-5">
                 {parent ? (
-                  <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] p-4">
+                  <div className={`${adminCardInnerClass} p-4`}>
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <p className="font-medium text-silver-200">
+                        <p className="font-medium text-zinc-100">
                           {parent.name}
                         </p>
-                        <p className="text-xs text-silver-600">
+                        <p className={adminCaptionClass}>
                           /{parent.slug} · {parent.status}
                         </p>
                       </div>
@@ -336,14 +350,14 @@ export function CategoriesView() {
                         <button
                           type="button"
                           onClick={() => openEdit(parent)}
-                          className="text-xs font-semibold text-silver-400 hover:text-white"
+                          className={adminBtnGhostClass}
                         >
                           Modifica
                         </button>
                         <Link
                           href={getGroupPath(group)}
                           target="_blank"
-                          className="text-xs font-semibold text-silver-500 hover:text-silver-300"
+                          className={adminBtnGhostClass}
                         >
                           Shop →
                         </Link>
@@ -354,7 +368,7 @@ export function CategoriesView() {
                   <button
                     type="button"
                     onClick={() => openCreateParent(group)}
-                    className="text-sm text-silver-500 hover:text-silver-300"
+                    className={`text-sm ${adminMutedTextClass} hover:text-white`}
                   >
                     Crea categoria principale «{shopFilterLabels[group]}»
                   </button>
@@ -362,7 +376,7 @@ export function CategoriesView() {
 
                 <div className="space-y-2">
                   {children.length === 0 ? (
-                    <p className="text-sm text-silver-600">
+                    <p className={adminMutedTextClass}>
                       Nessuna sottocategoria. Aggiungine una per il form
                       prodotto.
                     </p>
@@ -370,13 +384,13 @@ export function CategoriesView() {
                     children.map((child) => (
                       <div
                         key={child.id}
-                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/[0.06] px-4 py-3"
+                        className={`flex flex-wrap items-center justify-between gap-3 ${adminCardInnerClass} px-4 py-3`}
                       >
                         <div>
-                          <p className="text-sm font-medium text-silver-300">
+                          <p className="text-sm font-medium text-zinc-100">
                             {child.name}
                           </p>
-                          <p className="text-xs text-silver-600">
+                          <p className={adminCaptionClass}>
                             /shop/{group}/
                             {categoryPathSlug(child.slug, child.groupSlug)} ·{" "}
                             {child.status}
@@ -386,21 +400,21 @@ export function CategoriesView() {
                           <button
                             type="button"
                             onClick={() => openEdit(child)}
-                            className="text-xs font-semibold text-silver-400 hover:text-white"
+                            className={adminBtnGhostClass}
                           >
                             Modifica
                           </button>
                           <Link
                             href={`/shop/${group}/${categoryPathSlug(child.slug, child.groupSlug)}`}
                             target="_blank"
-                            className="text-xs font-semibold text-silver-500 hover:text-silver-300"
+                            className={adminBtnGhostClass}
                           >
                             Vedi →
                           </Link>
                           <button
                             type="button"
                             onClick={() => handleDelete(child)}
-                            className="text-xs font-semibold text-red-400/80 hover:text-red-300"
+                            className={adminBtnDangerClass}
                           >
                             Elimina
                           </button>
@@ -414,7 +428,7 @@ export function CategoriesView() {
                   type="button"
                   onClick={() => openCreateChild(group)}
                   disabled={!parent}
-                  className="text-xs font-semibold uppercase tracking-wider text-silver-400 hover:text-white disabled:opacity-40"
+                  className={`${adminBtnGhostClass} uppercase tracking-wider disabled:opacity-40`}
                 >
                   + Aggiungi sottocategoria
                 </button>

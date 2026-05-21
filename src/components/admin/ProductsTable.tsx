@@ -4,7 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useAdmin } from "./AdminProvider";
-import { AdminBadge } from "./admin-ui";
+import {
+  AdminBadge,
+  adminBtnDangerClass,
+  adminBtnGhostClass,
+  adminCaptionClass,
+  adminInputClass,
+  adminMutedTextClass,
+  adminTableHeadCellClass,
+  adminTableHeadRowClass,
+  adminTableRowClass,
+  adminTableShellClass,
+} from "./admin-ui";
 import {
   formatPrice,
   getProductPath,
@@ -62,7 +73,9 @@ export function ProductsTable() {
 
   if (loading) {
     return (
-      <p className="py-12 text-center text-silver-500">Caricamento prodotti…</p>
+      <p className={`py-12 text-center ${adminMutedTextClass}`}>
+        Caricamento prodotti…
+      </p>
     );
   }
 
@@ -74,14 +87,14 @@ export function ProductsTable() {
           placeholder="Cerca per nome o ID…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md rounded-xl border border-silver-500/35 bg-white/[0.05] px-4 py-2.5 text-sm text-silver-200 outline-none focus:border-silver-400/55"
+          className={`max-w-md ${adminInputClass}`}
         />
         <select
           value={groupFilter}
           onChange={(e) =>
             setGroupFilter(e.target.value as ShopFilterGroup | "all")
           }
-          className="rounded-xl border border-silver-500/35 bg-white/[0.05] px-4 py-2.5 text-sm text-silver-300 outline-none"
+          className={adminInputClass}
         >
           <option value="all">Tutte le linee</option>
           <option value="uomo">Uomo</option>
@@ -91,30 +104,30 @@ export function ProductsTable() {
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-silver-500/25 bg-white/[0.02]">
+      <div className={adminTableShellClass}>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[960px] text-left text-sm">
             <thead>
-              <tr className="border-b border-white/[0.08] bg-white/[0.04]">
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
+              <tr className={adminTableHeadRowClass}>
+                <th className={adminTableHeadCellClass}>
                   Prodotto
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
+                <th className={adminTableHeadCellClass}>
                   Categoria
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
+                <th className={adminTableHeadCellClass}>
                   Prezzo
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
+                <th className={adminTableHeadCellClass}>
                   Genere
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
+                <th className={adminTableHeadCellClass}>
                   Tag
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
+                <th className={adminTableHeadCellClass}>
                   Stato
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-silver-600">
+                <th className={adminTableHeadCellClass}>
                   Azioni
                 </th>
               </tr>
@@ -124,7 +137,7 @@ export function ProductsTable() {
                 <tr>
                   <td
                     colSpan={7}
-                    className="px-4 py-12 text-center text-silver-500"
+                    className={`px-4 py-12 text-center ${adminMutedTextClass}`}
                   >
                     Nessun prodotto trovato.
                   </td>
@@ -137,11 +150,11 @@ export function ProductsTable() {
                   return (
                     <tr
                       key={p.id}
-                      className="border-b border-white/[0.06] transition hover:bg-white/[0.03]"
+                      className={adminTableRowClass}
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-iron-950">
+                          <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-black/40">
                             <Image
                               src={p.image}
                               alt=""
@@ -150,25 +163,25 @@ export function ProductsTable() {
                             />
                           </div>
                           <div className="min-w-0">
-                            <p className="font-medium text-silver-200">
+                            <p className="font-medium text-zinc-100">
                               {p.name}
                             </p>
-                            <p className="text-xs text-silver-600">
+                            <p className={adminCaptionClass}>
                               {p.slug}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-silver-400">
+                      <td className={`px-4 py-3 ${adminMutedTextClass}`}>
                         <p>{shopFilterLabels[p.filterGroup]}</p>
-                        <p className="text-xs text-silver-600">
+                        <p className={adminCaptionClass}>
                           {sub?.title ?? p.subcategoryId ?? "—"}
                         </p>
                       </td>
-                      <td className="px-4 py-3 font-medium text-silver-300">
+                      <td className="px-4 py-3 font-medium text-zinc-100">
                         {formatPrice(p.price)}
                       </td>
-                      <td className="px-4 py-3 capitalize text-silver-500">
+                      <td className={`px-4 py-3 capitalize ${adminCaptionClass}`}>
                         {p.gender}
                       </td>
                       <td className="px-4 py-3">
@@ -178,7 +191,7 @@ export function ProductsTable() {
                               <AdminBadge key={t}>{t}</AdminBadge>
                             ))
                           ) : (
-                            <span className="text-silver-600">—</span>
+                            <span className="text-zinc-500">—</span>
                           )}
                         </div>
                       </td>
@@ -204,7 +217,7 @@ export function ProductsTable() {
                           <Link
                             href={getProductPath(publicId)}
                             target="_blank"
-                            className="text-xs font-semibold text-silver-400 hover:text-silver-200"
+                            className={adminBtnGhostClass}
                           >
                             Vedi
                           </Link>
@@ -212,7 +225,7 @@ export function ProductsTable() {
                             type="button"
                             disabled={deletingId === p.id}
                             onClick={() => handleDelete(p.id, p.name)}
-                            className="text-xs font-semibold text-red-400/80 hover:text-red-300 disabled:opacity-50"
+                            className={`${adminBtnDangerClass} disabled:opacity-50`}
                           >
                             {deletingId === p.id ? "…" : "Elimina"}
                           </button>
@@ -226,7 +239,7 @@ export function ProductsTable() {
           </table>
         </div>
       </div>
-      <p className="text-xs text-silver-600">
+      <p className={adminCaptionClass}>
         {filtered.length} di {products.length} prodotti —{" "}
         {dataSource === "supabase" ? "Supabase" : "sessione mock locale"}
       </p>
